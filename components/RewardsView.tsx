@@ -25,13 +25,13 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onUpdate, onDelete }) => {
     };
 
     return (
-        <div className={`group relative flex flex-col p-4 rounded-lg shadow-sm border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${note.color}`}>
+        <div className={`group relative flex flex-col p-4 rounded-lg shadow-sm border transition-all duration-200 hover:shadow-lg hover:-translate-y-1 min-h-28 ${note.color}`}>
             <textarea
                 ref={textAreaRef}
                 value={note.content}
                 onChange={handleContentChange}
                 placeholder="כתוב משהו..."
-                className="flex-1 w-full bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none resize-none overflow-hidden text-base leading-relaxed"
+                className="w-full bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none resize-none overflow-hidden text-base leading-relaxed"
                 rows={1}
             />
             <button
@@ -71,7 +71,7 @@ const RewardsView: React.FC<RewardsViewProps> = ({ notes, onAddNote, onUpdateNot
                 </div>
 
                 {notes.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
                         {notes.map(note => (
                             <NoteCard 
                                 key={note.id} 
