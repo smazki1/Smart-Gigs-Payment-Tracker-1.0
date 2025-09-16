@@ -189,8 +189,9 @@ interface CalendarViewProps {
     onAdd: (date: string) => void;
     onEdit: (gig: Gig) => void;
     onReschedule: (gigId: string, newDate: string) => void;
+    onDelete: (gig: Gig) => void;
 }
-const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onReschedule }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onReschedule, onDelete }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [dragOverDate, setDragOverDate] = useState<string | null>(null);
     const [holidays, setHolidays] = useState<Map<string, string>>(new Map());
@@ -337,15 +338,29 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                                                              overdue ? 'bg-red-500' :
                                                              'bg-yellow-500';
                                         return (
-                                            <div 
-                                                key={gig.id} 
+                                            <div
+                                                key={gig.id}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, gig)}
-                                                onClick={(e) => { e.stopPropagation(); onEdit(gig); }} 
-                                                className={`p-1.5 text-xs rounded-md cursor-grab active:cursor-grabbing flex items-center gap-1.5 ${statusColor} text-white hover:opacity-80 transition-opacity`}
+                                                className="group relative cursor-grab active:cursor-grabbing"
                                                 title={gig.name}
                                             >
-                                                <span className="truncate font-semibold">{gig.name}</span>
+                                                <div
+                                                    onClick={(e) => { e.stopPropagation(); onEdit(gig); }}
+                                                    className={`w-full p-1.5 text-xs rounded-md cursor-pointer flex items-center gap-1.5 ${statusColor} text-white hover:opacity-80 transition-opacity`}
+                                                >
+                                                    <span className="truncate font-semibold flex-1">{gig.name}</span>
+                                                </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onDelete(gig);
+                                                    }}
+                                                    className="absolute top-1/2 left-1 rtl:right-1 rtl:left-auto transform -translate-y-1/2 p-1 bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-red-700 z-10"
+                                                    aria-label={`מחק ${gig.name}`}
+                                                >
+                                                    <TrashIcon className="w-3 h-3" />
+                                                </button>
                                             </div>
                                         );
                                     })}
@@ -489,7 +504,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                 {activeView === 'list' ? (
                     <ListView gigs={filteredGigs} {...itemProps} />
                 ) : (
-                    <CalendarView gigs={gigs} onAdd={handleAddFromCalendar} onEdit={itemProps.onEdit} onReschedule={onReschedule} />
+                    <CalendarView gigs={gigs} onAdd={handleAddFromCalendar} onEdit={itemProps.onEdit} onReschedule={onReschedule} onDelete={itemProps.onDelete} />
                 )}
             </div>
         </div>
