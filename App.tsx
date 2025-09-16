@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { Gig, ParsedGig } from './types';
+import type { Gig, ParsedGig, RewardNote } from './types';
 import { GigStatus } from './types';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import TableView from './components/TableView';
 import Visualizations from './components/Visualizations';
+import RewardsView from './components/RewardsView';
 import { GigFormModal, ConfirmationModal, AIReminderModal, ImportStatusModal, ImportPreviewModal } from './components/Modals';
 
 // Mock data for initial load in Hebrew
@@ -56,8 +57,18 @@ const App: React.FC = () => {
             return getInitialGigs();
         }
     });
+
+    const [rewardsNotes, setRewardsNotes] = useState<RewardNote[]>(() => {
+        try {
+            const savedNotes = localStorage.getItem('rewardsNotes');
+            return savedNotes ? JSON.parse(savedNotes) : [];
+        } catch (error) {
+            console.error("Failed to parse rewards notes from localStorage", error);
+            return [];
+        }
+    });
     
-    const [view, setView] = useState<'dashboard' | 'table' | 'visualizations'>('dashboard');
+    const [view, setView] = useState<'dashboard' | 'table' | 'visualizations' | 'rewards'>('dashboard');
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingGig, setEditingGig] = useState<Gig | null>(null);
     const [gigToDelete, setGigToDelete] = useState<Gig | null>(null);
@@ -75,6 +86,15 @@ const App: React.FC = () => {
             console.error("Failed to save gigs to localStorage", error);
         }
     }, [gigs]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('rewardsNotes', JSON.stringify(rewardsNotes));
+        } catch (error) {
+            console.error("Failed to save rewards notes to localStorage", error);
+        }
+    }, [rewardsNotes]);
+
 
     const handleOpenFormModal = useCallback((gig: Gig | null = null, defaultDate?: string) => {
         setEditingGig(gig);
@@ -178,6 +198,32 @@ const App: React.FC = () => {
         }
     }, [handleSaveGig]);
 
+    const noteColors = [
+        'bg-yellow-200 border-yellow-300 dark:bg-yellow-900/40 dark:border-yellow-800/60',
+        'bg-blue-200 border-blue-300 dark:bg-blue-900/40 dark:border-blue-800/60',
+        'bg-green-200 border-green-300 dark:bg-green-900/40 dark:border-green-800/60',
+        'bg-pink-200 border-pink-300 dark:bg-pink-900/40 dark:border-pink-800/60',
+        'bg-purple-200 border-purple-300 dark:bg-purple-900/40 dark:border-purple-800/60',
+    ];
+
+    const handleAddNote = useCallback(() => {
+        const newNote: RewardNote = {
+            id: crypto.randomUUID(),
+            content: '',
+            color: noteColors[rewardsNotes.length % noteColors.length],
+        };
+        setRewardsNotes(prev => [newNote, ...prev]);
+    }, [rewardsNotes.length]);
+
+    const handleUpdateNote = useCallback((id: string, content: string) => {
+        setRewardsNotes(prev => prev.map(note => note.id === id ? { ...note, content } : note));
+    }, []);
+
+    const handleDeleteNote = useCallback((id: string) => {
+        setRewardsNotes(prev => prev.filter(note => note.id !== id));
+    }, []);
+
+
     return (
         <div className="min-h-screen text-gray-800 dark:text-gray-200">
             <Header 
@@ -208,8 +254,15 @@ const App: React.FC = () => {
                         onDelete={(gig) => setGigToDelete(gig)}
                         onEdit={(gig) => handleOpenFormModal(gig)}
                     />
-                ) : (
+                ) : view === 'visualizations' ? (
                     <Visualizations gigs={gigs} />
+                ) : (
+                    <RewardsView
+                        notes={rewardsNotes}
+                        onAddNote={handleAddNote}
+                        onUpdateNote={handleUpdateNote}
+                        onDeleteNote={handleDeleteNote}
+                    />
                 )}
             </main>
 

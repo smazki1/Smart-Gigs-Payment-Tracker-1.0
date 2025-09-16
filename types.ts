@@ -32,3 +32,9 @@ export interface ParsedGig {
   paymentAmount: number;
   eventDate: string; // YYYY-MM-DD
 }
+
+export interface RewardNote {
+  id: string;
+  content: string;
+  color: string;
+}

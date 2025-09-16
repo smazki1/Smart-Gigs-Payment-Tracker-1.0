@@ -2,14 +2,14 @@
 import React, { useRef } from 'react';
 import type { Gig } from '../types';
 import { generateCsv, parseCsv } from '../utils/helpers';
-import { ArrowDownTrayIcon, ArrowUpTrayIcon, ListBulletIcon, CalendarDaysIcon, ChartBarIcon } from './icons';
+import { ArrowDownTrayIcon, ArrowUpTrayIcon, ListBulletIcon, CalendarDaysIcon, ChartBarIcon, GiftIcon } from './icons';
 
 interface HeaderProps {
     gigs: Gig[];
     onPreviewImport: (importedGigs: Gig[]) => void;
     setImportError: (message: string) => void;
-    currentView: 'dashboard' | 'table' | 'visualizations';
-    onNavigate: (view: 'dashboard' | 'table' | 'visualizations') => void;
+    currentView: 'dashboard' | 'table' | 'visualizations' | 'rewards';
+    onNavigate: (view: 'dashboard' | 'table' | 'visualizations' | 'rewards') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ gigs, onPreviewImport, setImportError, currentView, onNavigate }) => {
@@ -83,6 +83,12 @@ const Header: React.FC<HeaderProps> = ({ gigs, onPreviewImport, setImportError, 
                             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'visualizations' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
                         >
                            <ChartBarIcon className="w-4 h-4"/> ניתוחים
+                        </button>
+                         <button
+                            onClick={() => onNavigate('rewards')}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'rewards' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                        >
+                           <GiftIcon className="w-4 h-4"/> תגמולים
                         </button>
                     </nav>
                 </div>
