@@ -2,14 +2,14 @@
 import React, { useRef } from 'react';
 import type { Gig } from '../types';
 import { generateCsv, parseCsv } from '../utils/helpers';
-import { ArrowDownTrayIcon, ArrowUpTrayIcon, ListBulletIcon, CalendarDaysIcon, ChartBarIcon, GiftIcon } from './icons';
+import { ArrowDownTrayIcon, ArrowUpTrayIcon, ListBulletIcon, CalendarDaysIcon, ChartBarIcon, GiftIcon, DocumentTextIcon, CreditCardIcon, ChartPieIcon, BriefcaseIcon } from './icons';
 
 interface HeaderProps {
     gigs: Gig[];
     onPreviewImport: (importedGigs: Gig[]) => void;
     setImportError: (message: string) => void;
-    currentView: 'dashboard' | 'table' | 'visualizations' | 'rewards';
-    onNavigate: (view: 'dashboard' | 'table' | 'visualizations' | 'rewards') => void;
+    currentView: 'dashboard' | 'table' | 'visualizations' | 'rewards' | 'monthlySummary' | 'expenses' | 'expenseAnalytics' | 'packages';
+    onNavigate: (view: 'dashboard' | 'table' | 'visualizations' | 'rewards' | 'monthlySummary' | 'expenses' | 'expenseAnalytics' | 'packages') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ gigs, onPreviewImport, setImportError, currentView, onNavigate }) => {
@@ -65,32 +65,73 @@ const Header: React.FC<HeaderProps> = ({ gigs, onPreviewImport, setImportError, 
             <div className="max-w-screen-2xl mx-auto px-4 md:px-6 h-16 flex justify-between items-center">
                 <div className="flex items-center gap-6">
                     <h1 className="text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400">מעקב תשלומים חכם</h1>
-                    <nav className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-gray-800 p-1 rounded-lg">
+                    <nav className="hidden xl:flex items-center gap-2 bg-slate-100 dark:bg-gray-800 p-1 rounded-lg overflow-x-auto">
                         <button
                             onClick={() => onNavigate('dashboard')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'dashboard' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'dashboard' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
                         >
                             <ListBulletIcon className="w-4 h-4"/> לוח בקרה
                         </button>
                         <button
                             onClick={() => onNavigate('table')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'table' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'table' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
                         >
                             <CalendarDaysIcon className="w-4 h-4"/> תצוגת טבלה
                         </button>
                         <button
                             onClick={() => onNavigate('visualizations')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'visualizations' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'visualizations' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
                         >
                            <ChartBarIcon className="w-4 h-4"/> ניתוחים
                         </button>
                          <button
+                            onClick={() => onNavigate('monthlySummary')}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'monthlySummary' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                        >
+                           <DocumentTextIcon className="w-4 h-4"/> סיכום חודשי
+                        </button>
+                        <button
+                            onClick={() => onNavigate('expenses')}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'expenses' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                        >
+                           <CreditCardIcon className="w-4 h-4"/> הוצאות
+                        </button>
+                         <button
+                            onClick={() => onNavigate('expenseAnalytics')}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'expenseAnalytics' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                        >
+                           <ChartPieIcon className="w-4 h-4"/> ניתוח הוצאות
+                        </button>
+                        <button
+                            onClick={() => onNavigate('packages')}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'packages' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                        >
+                           <BriefcaseIcon className="w-4 h-4"/> ניהול חבילות
+                        </button>
+                         <button
                             onClick={() => onNavigate('rewards')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${currentView === 'rewards' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors whitespace-nowrap ${currentView === 'rewards' ? 'bg-white dark:bg-gray-700 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/30'}`}
                         >
                            <GiftIcon className="w-4 h-4"/> תגמולים
                         </button>
                     </nav>
+                     {/* Mobile Menu Dropdown Fallback (Simplified visual cue for small screens) */}
+                     <div className="xl:hidden">
+                         <select 
+                            value={currentView} 
+                            onChange={(e) => onNavigate(e.target.value as any)}
+                            className="bg-slate-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg p-2.5 border-none focus:ring-2 focus:ring-primary-500"
+                         >
+                             <option value="dashboard">לוח בקרה</option>
+                             <option value="table">תצוגת טבלה</option>
+                             <option value="visualizations">ניתוחים</option>
+                             <option value="monthlySummary">סיכום חודשי</option>
+                             <option value="expenses">הוצאות</option>
+                             <option value="expenseAnalytics">ניתוח הוצאות</option>
+                             <option value="packages">ניהול חבילות</option>
+                             <option value="rewards">תגמולים</option>
+                         </select>
+                     </div>
                 </div>
 
                 <div className="flex space-x-2 rtl:space-x-reverse">

@@ -294,12 +294,12 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ gigs }) => {
       expected: 0,
       eventCount: 0,
     }));
+    const yearStr = String(selectedYear);
 
     gigs.forEach(gig => {
       // Income calculation (based on paymentDueDate)
-      const paymentDate = new Date(gig.paymentDueDate);
-      if (paymentDate.getFullYear() === selectedYear) {
-        const monthIndex = paymentDate.getMonth();
+      if (gig.paymentDueDate.startsWith(yearStr)) {
+        const monthIndex = parseInt(gig.paymentDueDate.substring(5, 7), 10) - 1;
         if (gig.status === GigStatus.Paid) {
           months[monthIndex].paid += gig.paymentAmount;
         } else if (gig.status === GigStatus.Pending) {
@@ -307,9 +307,8 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ gigs }) => {
         }
       }
       // Event count calculation (based on eventDate)
-      const eventDate = new Date(gig.eventDate);
-      if (eventDate.getFullYear() === selectedYear) {
-          const monthIndex = eventDate.getMonth();
+      if (gig.eventDate.startsWith(yearStr)) {
+          const monthIndex = parseInt(gig.eventDate.substring(5, 7), 10) - 1;
           months[monthIndex].eventCount++;
       }
     });
@@ -318,8 +317,9 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ gigs }) => {
   }, [gigs, selectedYear]);
 
   const pieChartData = useMemo(() => {
+    const yearStr = String(selectedYear);
     const paidGigsThisYear = gigs.filter(g => 
-        g.status === GigStatus.Paid && new Date(g.paymentDueDate).getFullYear() === selectedYear
+        g.status === GigStatus.Paid && g.paymentDueDate.startsWith(yearStr)
     );
     
     const incomeBySource: { [key: string]: number } = {};
@@ -353,9 +353,10 @@ const ChartsSection: React.FC<ChartsSectionProps> = ({ gigs }) => {
   }, [gigs, selectedYear]);
   
   const availableYears = useMemo(() => {
-      const years = new Set(gigs.flatMap(g => [new Date(g.paymentDueDate).getFullYear(), new Date(g.eventDate).getFullYear()]));
+      // FIX: Explicitly type the Set as Set<number> to ensure correct type inference down the chain.
+      const years = new Set<number>(gigs.flatMap(g => [parseInt(g.paymentDueDate.substring(0,4)), parseInt(g.eventDate.substring(0,4))]));
       years.add(new Date().getFullYear());
-      return Array.from(years).sort((a,b) => b-a);
+      return Array.from(years).filter(y => !isNaN(y)).sort((a,b) => b-a);
   }, [gigs]);
 
   const changeYear = (direction: number) => {

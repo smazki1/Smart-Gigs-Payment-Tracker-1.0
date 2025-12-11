@@ -10,6 +10,18 @@ export interface FileAttachment {
   dataUrl: string;
 }
 
+export interface Package {
+  id: string;
+  name: string; // e.g. "Jan 2026 Implementation"
+  clientName: string;
+  totalPrice: number;
+  billingDate?: string; // YYYY-MM-DD (Optional - unbilled packages)
+  maxWorkshops: number;
+  maxHours: number;
+  status: GigStatus; // To track if the package itself is paid
+  createdAt: string;
+}
+
 export interface Gig {
   id: string;
   name: string;
@@ -22,6 +34,11 @@ export interface Gig {
   invoiceNumber?: string;
   notes?: string;
   attachments?: FileAttachment[];
+  duration?: number; // Duration in hours
+  summary?: string;
+  // Package Linking
+  packageId?: string; // If linked to a package
+  usageType?: 'workshop' | 'consulting'; // How it counts towards the package quota
 }
 
 export type GigFilterStatus = 'All' | 'Pending' | 'Paid' | 'Overdue';
@@ -37,4 +54,26 @@ export interface RewardNote {
   id: string;
   content: string;
   color: string;
+}
+
+export interface RecurringExpense {
+  id: string;
+  name: string;
+  monthlyAmount: number;
+  paymentType: string; // e.g. 'Credit Card', 'Bank Transfer', 'Bit'
+  category: string;
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  chargeDayRule?: string; // e.g., "10", "End of month"
+  notes?: string;
+  isEssential?: boolean;
+  isActive: boolean;
+}
+
+export interface MonthlyExpenseInstance {
+  monthKey: string; // YYYY-MM
+  amount: number;
+  sourceRecurringExpenseId?: string;
+  isOneTime: boolean;
+  notes?: string;
 }

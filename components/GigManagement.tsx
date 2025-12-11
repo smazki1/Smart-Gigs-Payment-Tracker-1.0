@@ -4,7 +4,7 @@ import { GigStatus } from '../types';
 import { VAT_RATE } from '../constants';
 import { formatCurrency, formatDate, isOverdue, getMonthHebrew, getHolidaysForYear } from '../utils/helpers';
 import { parseGigFromString } from '../services/geminiService';
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, CheckCircleIcon, PaperAirplaneIcon, PlusIcon, ListBulletIcon, CalendarDaysIcon, SparklesIcon, CurrencyDollarIcon, PaperClipIcon, ChatBubbleBottomCenterTextIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, CheckCircleIcon, PaperAirplaneIcon, PlusIcon, ListBulletIcon, CalendarDaysIcon, SparklesIcon, CurrencyDollarIcon, PaperClipIcon, ChatBubbleBottomCenterTextIcon, XMarkIcon } from './icons';
 
 // --- Smart Add Component ---
 interface SmartAddComponentProps {
@@ -57,13 +57,15 @@ const SmartAddComponent: React.FC<SmartAddComponentProps> = ({ onSmartAdd }) => 
 // --- Gig Item Component ---
 interface GigItemProps {
   gig: Gig;
+  isSelected: boolean;
+  onToggleSelection: (id: string) => void;
   onEdit: (gig: Gig) => void;
   onSave: (gig: Partial<Gig> & { id: string }) => void;
   onDelete: (gig: Gig) => void;
   onMarkAsPaid: (gig: Gig) => void;
   onAIReminder: (gig: Gig) => void;
 }
-const GigItem: React.FC<GigItemProps> = React.memo(({ gig, onEdit, onSave, onDelete, onMarkAsPaid, onAIReminder }) => {
+const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleSelection, onEdit, onSave, onDelete, onMarkAsPaid, onAIReminder }) => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [editedName, setEditedName] = useState(gig.name);
     const nameInputRef = React.useRef<HTMLInputElement>(null);
@@ -103,42 +105,51 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, onEdit, onSave, onDel
     };
 
     return (
-        <div className={`bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-gray-800 transition-shadow hover:shadow-md`}>
+        <div className={`p-4 rounded-xl shadow-sm border transition-all duration-200 ${isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-gray-800/50 border-slate-200 dark:border-gray-800 hover:shadow-md'}`}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                     {isEditingName ? (
-                        <input
-                            ref={nameInputRef}
-                            type="text"
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            onBlur={handleNameSave}
-                            onKeyDown={handleKeyDown}
-                            className="font-semibold text-lg bg-slate-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md p-1 -m-1 w-full focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                        />
-                    ) : (
-                       <div>
-                            <p onDoubleClick={() => setIsEditingName(true)} className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-text" title="Double-click to edit">
-                                {gig.name}
-                            </p>
-                            {gig.supplierName && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{gig.supplierName}</p>}
+                 <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => onToggleSelection(gig.id)}
+                        aria-label={`Select gig ${gig.name}`}
+                        className="mt-1 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                        {isEditingName ? (
+                            <input
+                                ref={nameInputRef}
+                                type="text"
+                                value={editedName}
+                                onChange={(e) => setEditedName(e.target.value)}
+                                onBlur={handleNameSave}
+                                onKeyDown={handleKeyDown}
+                                className="font-semibold text-lg bg-slate-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md p-1 -m-1 w-full focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                            />
+                        ) : (
+                        <div>
+                                <p onDoubleClick={() => setIsEditingName(true)} className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-text" title="Double-click to edit">
+                                    {gig.name}
+                                </p>
+                                {gig.supplierName && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{gig.supplierName}</p>}
+                            </div>
+                        )}
+                        <div className="flex items-center space-x-4 rtl:space-x-reverse mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${statusColors[currentStatus.color]}`}>
+                                <currentStatus.Icon className="w-3.5 h-3.5" />
+                                {currentStatus.text}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <CalendarDaysIcon className="w-4 h-4"/>
+                                <span>אירוע: {formatDate(gig.eventDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <CurrencyDollarIcon className="w-4 h-4"/>
+                                <span>לתשלום עד: {formatDate(gig.paymentDueDate)}</span>
+                            </div>
+                            {gig.notes && <ChatBubbleBottomCenterTextIcon className="w-4 h-4" title={gig.notes} />}
+                            {(gig.attachments && gig.attachments.length > 0) && <PaperClipIcon className="w-4 h-4" title={`${gig.attachments.length} files attached`} />}
                         </div>
-                    )}
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${statusColors[currentStatus.color]}`}>
-                            <currentStatus.Icon className="w-3.5 h-3.5" />
-                            {currentStatus.text}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <CalendarDaysIcon className="w-4 h-4"/>
-                            <span>אירוע: {formatDate(gig.eventDate)}</span>
-                        </div>
-                         <div className="flex items-center gap-2">
-                            <CurrencyDollarIcon className="w-4 h-4"/>
-                            <span>לתשלום עד: {formatDate(gig.paymentDueDate)}</span>
-                        </div>
-                         {gig.notes && <ChatBubbleBottomCenterTextIcon className="w-4 h-4" title={gig.notes} />}
-                         {(gig.attachments && gig.attachments.length > 0) && <PaperClipIcon className="w-4 h-4" title={`${gig.attachments.length} files attached`} />}
                     </div>
                 </div>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -163,14 +174,16 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, onEdit, onSave, onDel
 });
 
 // --- List View Component ---
-interface ListViewProps extends Omit<GigItemProps, 'gig'> {
+interface ListViewProps extends Omit<GigItemProps, 'gig' | 'isSelected' | 'onToggleSelection'> {
   gigs: Gig[];
+  selectedGigs: Set<string>;
+  onToggleSelection: (id: string) => void;
 }
-const ListView: React.FC<ListViewProps> = ({ gigs, ...props }) => {
+const ListView: React.FC<ListViewProps> = ({ gigs, selectedGigs, onToggleSelection, ...props }) => {
   return (
     <div className="space-y-3">
       {gigs.length > 0 ? (
-        gigs.map(gig => <GigItem key={gig.id} gig={gig} {...props} />)
+        gigs.map(gig => <GigItem key={gig.id} gig={gig} isSelected={selectedGigs.has(gig.id)} onToggleSelection={onToggleSelection} {...props} />)
       ) : (
         <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-gray-800 rounded-lg">
           <CalendarDaysIcon className="mx-auto w-12 h-12 text-gray-300 dark:text-gray-600" />
@@ -376,65 +389,107 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
 
 
 // --- Main Gig Management Component ---
-interface GigManagementProps extends Omit<GigItemProps, 'gig'> {
+interface GigManagementProps extends Omit<GigItemProps, 'gig' | 'isSelected' | 'onToggleSelection'> {
     gigs: Gig[];
     onSmartAdd: (parsedGig: ParsedGig) => void;
     onAdd: (date?: string) => void;
     onReschedule: (gigId: string, newDate: string) => void;
+    onBulkMarkAsPaid: (ids: string[]) => void;
+    onBulkDelete: (ids: string[]) => void;
 }
-const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, onReschedule, ...itemProps }) => {
+type DateFilter = 'all' | 'thisMonth' | 'lastMonth' | 'thisYear';
+
+const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, onReschedule, onBulkMarkAsPaid, onBulkDelete, ...itemProps }) => {
     const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<GigFilterStatus>('All');
     const [sortCriteria, setSortCriteria] = useState('eventDate-desc');
+    const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+    const [selectedGigs, setSelectedGigs] = useState<Set<string>>(new Set());
     
     const filteredGigs = useMemo(() => {
         return gigs
             .filter(gig => {
+                // Search Filter
                 const searchTermLower = searchTerm.toLowerCase();
                 const searchMatch = gig.name.toLowerCase().includes(searchTermLower) || (gig.supplierName && gig.supplierName.toLowerCase().includes(searchTermLower));
                 if (!searchMatch) return false;
 
-                if (filterStatus === 'All') return true;
-                if (filterStatus === 'Paid') return gig.status === GigStatus.Paid;
-                if (filterStatus === 'Pending') return gig.status === GigStatus.Pending && !isOverdue(gig);
-                if (filterStatus === 'Overdue') return isOverdue(gig);
+                // Status Filter
+                if (filterStatus !== 'All') {
+                    const isGigOverdue = isOverdue(gig);
+                    if (filterStatus === 'Paid' && gig.status !== GigStatus.Paid) return false;
+                    if (filterStatus === 'Pending' && (gig.status !== GigStatus.Pending || isGigOverdue)) return false;
+                    if (filterStatus === 'Overdue' && !isGigOverdue) return false;
+                }
+
+                // Date Filter
+                if (dateFilter !== 'all') {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    if (dateFilter === 'thisMonth') {
+                        const month = now.getMonth() + 1;
+                        const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+                        if (!gig.eventDate.startsWith(monthStr)) return false;
+                    } else if (dateFilter === 'lastMonth') {
+                        const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                        const lastMonthYear = lastMonthDate.getFullYear();
+                        const lastMonth = lastMonthDate.getMonth() + 1;
+                        const monthStr = `${lastMonthYear}-${String(lastMonth).padStart(2, '0')}`;
+                        if (!gig.eventDate.startsWith(monthStr)) return false;
+                    } else if (dateFilter === 'thisYear') {
+                        if (!gig.eventDate.startsWith(String(year))) return false;
+                    }
+                }
                 
-                return false;
+                return true;
             })
             .sort((a, b) => {
                 const [sortKey, sortDirection] = sortCriteria.split('-');
-                
-                let valA: string | number;
-                let valB: string | number;
-
+                let valA: number;
+                let valB: number;
                 switch (sortKey) {
-                    case 'eventDate':
-                    case 'paymentDueDate':
-                        valA = new Date(a[sortKey as 'eventDate' | 'paymentDueDate']).getTime();
-                        valB = new Date(b[sortKey as 'eventDate' | 'paymentDueDate']).getTime();
-                        break;
+                    case 'eventDate': case 'paymentDueDate':
+                        return sortDirection === 'asc' ? a[sortKey].localeCompare(b[sortKey]) : b[sortKey].localeCompare(a[sortKey]);
                     case 'paymentAmount':
                         valA = a.paymentAmount;
                         valB = b.paymentAmount;
                         break;
                     case 'name':
-                         return sortDirection === 'asc' 
-                            ? (a.name || '').localeCompare(b.name || '', 'he')
-                            : (b.name || '').localeCompare(a.name || '', 'he');
+                         return sortDirection === 'asc' ? (a.name || '').localeCompare(b.name || '', 'he') : (b.name || '').localeCompare(a.name || '', 'he');
                     case 'supplierName':
-                        return sortDirection === 'asc' 
-                            ? (a.supplierName || '').localeCompare(b.supplierName || '', 'he')
-                            : (b.supplierName || '').localeCompare(a.supplierName || '', 'he');
+                        return sortDirection === 'asc' ? (a.supplierName || '').localeCompare(b.supplierName || '', 'he') : (b.supplierName || '').localeCompare(a.supplierName || '', 'he');
                     default:
-                        // default to eventDate desc
-                        return new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime();
+                        return b.eventDate.localeCompare(a.eventDate);
                 }
-                
                 return sortDirection === 'asc' ? valA - valB : valB - valA;
             });
-    }, [gigs, searchTerm, filterStatus, sortCriteria]);
+    }, [gigs, searchTerm, filterStatus, dateFilter, sortCriteria]);
 
+    useEffect(() => {
+        setSelectedGigs(new Set());
+    }, [searchTerm, filterStatus, dateFilter, sortCriteria, activeView]);
+
+    const handleToggleSelection = (gigId: string) => {
+        setSelectedGigs(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(gigId)) {
+                newSet.delete(gigId);
+            } else {
+                newSet.add(gigId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleToggleSelectAll = () => {
+        if (selectedGigs.size === filteredGigs.length) {
+            setSelectedGigs(new Set());
+        } else {
+            setSelectedGigs(new Set(filteredGigs.map(g => g.id)));
+        }
+    };
+    
     const handleAddFromCalendar = (date: string) => {
         onAdd(date);
     };
@@ -445,46 +500,31 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
             
             <div className="space-y-4">
                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-3 bg-white/50 dark:bg-gray-800/30 border border-slate-200 dark:border-gray-800 rounded-lg">
-                    {/* View Toggles */}
                     <div className="p-1 rounded-lg bg-slate-100 dark:bg-gray-700/50 flex">
-                        <button
-                            onClick={() => setActiveView('list')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'list' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}
-                        >
-                           <ListBulletIcon/> רשימה
-                        </button>
-                        <button
-                            onClick={() => setActiveView('calendar')}
-                            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'calendar' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}
-                        >
-                            <CalendarDaysIcon/> לוח שנה
-                        </button>
+                        <button onClick={() => setActiveView('list')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'list' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}> <ListBulletIcon/> רשימה </button>
+                        <button onClick={() => setActiveView('calendar')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'calendar' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}><CalendarDaysIcon/> לוח שנה</button>
                     </div>
 
                     {activeView === 'list' && (
                         <div className="flex-1 flex flex-col sm:flex-row gap-2 w-full">
-                            <input
-                                type="text"
-                                placeholder="חיפוש לפי שם או ספק..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full sm:flex-1 p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                            />
-                            <select
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value as GigFilterStatus)}
-                                className="w-full sm:w-40 p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                            >
+                             <div className="flex items-center gap-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg px-3 flex-shrink-0">
+                                <input id="select-all" type="checkbox" onChange={handleToggleSelectAll} checked={filteredGigs.length > 0 && selectedGigs.size === filteredGigs.length} className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer" />
+                                <label htmlFor="select-all" className="text-sm font-medium text-gray-700 dark:text-gray-300 pr-1 py-2 cursor-pointer">בחר הכל</label>
+                            </div>
+                            <input type="text" placeholder="חיפוש לפי שם או ספק..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full sm:flex-1 p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500" />
+                             <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as DateFilter)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
+                                <option value="all">כל הזמנים</option>
+                                <option value="thisMonth">חודש נוכחי</option>
+                                <option value="lastMonth">חודש שעבר</option>
+                                <option value="thisYear">שנה נוכחית</option>
+                            </select>
+                            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as GigFilterStatus)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
                                 <option value="All">כל הסטטוסים</option>
                                 <option value="Pending">ממתין</option>
                                 <option value="Paid">שולם</option>
                                 <option value="Overdue">באיחור</option>
                             </select>
-                             <select
-                                value={sortCriteria}
-                                onChange={(e) => setSortCriteria(e.target.value)}
-                                className="w-full sm:w-48 p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500"
-                            >
+                             <select value={sortCriteria} onChange={(e) => setSortCriteria(e.target.value)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
                                 <option value="eventDate-desc">מיון: תאריך אירוע (חדש › ישן)</option>
                                 <option value="eventDate-asc">מיון: תאריך אירוע (ישן › חדש)</option>
                                 <option value="paymentAmount-desc">מיון: סכום (גבוה › נמוך)</option>
@@ -502,11 +542,42 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                 </div>
                 
                 {activeView === 'list' ? (
-                    <ListView gigs={filteredGigs} {...itemProps} />
+                    <ListView gigs={filteredGigs} selectedGigs={selectedGigs} onToggleSelection={handleToggleSelection} {...itemProps} />
                 ) : (
                     <CalendarView gigs={gigs} onAdd={handleAddFromCalendar} onEdit={itemProps.onEdit} onReschedule={onReschedule} onDelete={itemProps.onDelete} />
                 )}
             </div>
+
+            {selectedGigs.size > 0 && activeView === 'list' && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white dark:bg-gray-800 shadow-2xl rounded-lg border border-slate-200 dark:border-gray-700 flex items-center gap-4 px-4 py-3 animate-fade-in">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{selectedGigs.size} נבחרו</span>
+                    <div className="w-px h-6 bg-slate-200 dark:bg-gray-600"></div>
+                    <button
+                        onClick={() => {
+                            onBulkMarkAsPaid(Array.from(selectedGigs));
+                            setSelectedGigs(new Set());
+                        }}
+                        className="flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                    >
+                        <CheckCircleIcon className="w-5 h-5"/> סמן כשולם
+                    </button>
+                    <button
+                        onClick={() => {
+                            onBulkDelete(Array.from(selectedGigs));
+                        }}
+                        className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 transition-colors"
+                    >
+                        <TrashIcon className="w-5 h-5"/> מחק
+                    </button>
+                    <button
+                        onClick={() => setSelectedGigs(new Set())}
+                        title="נקה בחירה"
+                        className="p-2 text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-full"
+                    >
+                        <XMarkIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

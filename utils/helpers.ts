@@ -23,19 +23,17 @@ export const getMonthHebrew = (date: Date): string => {
 
 
 export const isOverdue = (gig: Gig): boolean => {
-  return gig.status === GigStatus.Pending && new Date(gig.paymentDueDate) < new Date() && !isToday(new Date(gig.paymentDueDate));
+  if (gig.status !== GigStatus.Pending) {
+    return false;
+  }
+  // Compare date strings to avoid timezone issues.
+  // An event due today is not overdue.
+  const todayStr = new Date().toISOString().split('T')[0];
+  return gig.paymentDueDate < todayStr;
 };
 
-const isToday = (someDate: Date): boolean => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const checkDate = new Date(someDate);
-    checkDate.setHours(0,0,0,0);
-    return checkDate.getTime() === today.getTime();
-}
-
 export const generateCsv = (gigs: Gig[]): string => {
-  const headers = ['id', 'name', 'supplierName', 'paymentAmount', 'eventDate', 'paymentDueDate', 'status', 'createdAt', 'invoiceNumber', 'notes'];
+  const headers = ['id', 'name', 'supplierName', 'paymentAmount', 'eventDate', 'paymentDueDate', 'status', 'createdAt', 'invoiceNumber', 'notes', 'duration', 'summary'];
   const csvRows = [headers.join(',')];
   for (const gig of gigs) {
     const values = headers.map(header => {
@@ -90,7 +88,7 @@ export const parseCsv = (csvText: string): Gig[] => {
         headers.forEach((header, index) => {
             let value: any = values[index] || '';
             
-            if (header === 'paymentAmount') {
+            if (header === 'paymentAmount' || header === 'duration') {
                 value = parseFloat(value) || 0;
             } else if (header === 'status' && !Object.values(GigStatus).includes(value as GigStatus)) {
                 value = GigStatus.Pending;
