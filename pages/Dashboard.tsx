@@ -37,7 +37,7 @@ export default function Dashboard() {
     const [currentView, setCurrentView] = useState<'dashboard' | 'table' | 'visualizations' | 'rewards' | 'monthlySummary' | 'expenses' | 'expenseAnalytics' | 'packages'>('dashboard');
 
     useEffect(() => {
-        console.log("[DEBUG] Dashboard/GigManagement loaded - Fix Version 1.0.1");
+        console.log("[DEBUG] Dashboard/GigManagement loaded - Fix Version 1.0.2 (Upsert)");
     }, []);
 
     // Data
@@ -108,32 +108,8 @@ export default function Dashboard() {
             const idToUpdate = gigData.id || (editingGig && editingGig.id);
 
             if (idToUpdate) {
-                try {
-                    await updateGig(idToUpdate, gigData);
-                    toast.success('האירוע עודכן בהצלחה');
-                } catch (error: any) {
-                    console.error("Update gig error details:", {
-                        code: error.code,
-                        message: error.message,
-                        toString: error.toString()
-                    });
-
-                    const errorStr = error.toString();
-                    // Check for various forms of "document not found"
-                    const isNotFoundError =
-                        error.code === 'not-found' ||
-                        (error.message && error.message.includes('No document to update')) ||
-                        errorStr.includes('No document to update');
-
-                    if (isNotFoundError) {
-                        console.warn('Document not found for update, creating new Instead:', idToUpdate);
-                        const { id, ...dataToSave } = gigData; // Strip the bad ID
-                        await addGig(dataToSave as Omit<Gig, 'id'>);
-                        toast.success('האירוע נוסף מחדש (לא נמצא המקור)');
-                    } else {
-                        throw error;
-                    }
-                }
+                await updateGig(idToUpdate, gigData);
+                toast.success('האירוע עודכן בהצלחה');
             } else {
                 await addGig(gigData as Omit<Gig, 'id'>);
                 toast.success('האירוע נוסף בהצלחה');

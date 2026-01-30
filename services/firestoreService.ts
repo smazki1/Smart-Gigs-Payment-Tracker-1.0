@@ -3,6 +3,7 @@ import {
     collection,
     addDoc,
     updateDoc,
+    setDoc,
     deleteDoc,
     doc,
     onSnapshot,
@@ -44,7 +45,9 @@ export const addGig = async (gig: Omit<Gig, 'id'>) => {
 
 export const updateGig = async (id: string, gigData: Partial<Gig>) => {
     const docRef = doc(db, GIGS_COLLECTION, id);
-    return updateDoc(docRef, cleanData(gigData) as DocumentData);
+    // Use setDoc with merge: true to effectively upsert
+    // This handles cases where the document might not exist (e.g. client-generated ID)
+    return setDoc(docRef, cleanData(gigData), { merge: true });
 };
 
 export const deleteGig = async (id: string) => {
