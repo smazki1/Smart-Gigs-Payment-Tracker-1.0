@@ -1,5 +1,5 @@
 
-import { RecurringExpense, MonthlyExpenseInstance, Gig, GigStatus } from '../types';
+import { RecurringExpense, MonthlyExpenseInstance, Gig, GigStatus, Package } from '../types';
 
 /**
  * Shared helper to determine the effective amount for a specific expense in a specific month.
@@ -41,19 +41,19 @@ export const getMonthlyExpensesGrid = (
   monthsCount: number = 12
 ): Map<string, { [expenseId: string]: number }> => {
   const grid = new Map<string, { [expenseId: string]: number }>();
-  
+
   // Index instances for faster lookup: "expenseId-YYYY-MM" -> instance
   const instanceMap = new Map<string, MonthlyExpenseInstance>();
   monthlyInstances.forEach(inst => {
     if (inst.sourceRecurringExpenseId) {
-        instanceMap.set(`${inst.sourceRecurringExpenseId}-${inst.monthKey}`, inst);
+      instanceMap.set(`${inst.sourceRecurringExpenseId}-${inst.monthKey}`, inst);
     }
   });
 
   for (let i = 0; i < monthsCount; i++) {
     const current = new Date(startMonth);
     current.setMonth(current.getMonth() + i);
-    
+
     // Format YYYY-MM
     const year = current.getFullYear();
     const month = String(current.getMonth() + 1).padStart(2, '0');
@@ -64,9 +64,9 @@ export const getMonthlyExpensesGrid = (
     expenses.forEach(expense => {
       const instance = instanceMap.get(`${expense.id}-${monthKey}`);
       const amount = getExpenseAmountForMonth(expense, monthKey, instance);
-      
+
       if (amount !== null) {
-          monthExpenses[expense.id] = amount;
+        monthExpenses[expense.id] = amount;
       }
     });
 
@@ -84,9 +84,9 @@ export const getTotalExpensesForMonth = (
   // Index instances for this month
   const instanceMap = new Map<string, MonthlyExpenseInstance>();
   monthlyInstances.filter(i => i.monthKey === monthKey).forEach(inst => {
-      if (inst.sourceRecurringExpenseId) {
-          instanceMap.set(inst.sourceRecurringExpenseId, inst);
-      }
+    if (inst.sourceRecurringExpenseId) {
+      instanceMap.set(inst.sourceRecurringExpenseId, inst);
+    }
   });
 
   return expenses.reduce((sum, expense) => {
@@ -96,106 +96,117 @@ export const getTotalExpensesForMonth = (
   }, 0);
 };
 
-export const getMonthIncome = (gigs: Gig[], monthKey: string): number => {
-    return gigs.reduce((acc, gig) => {
-        if (gig.paymentDueDate.startsWith(monthKey)) {
-            // We count everything expected this month (Paid + Pending) as "Expected Income"
-            return acc + gig.paymentAmount;
-        }
-        return acc;
-    }, 0);
+export const getMonthIncome = (gigs: Gig[], packages: Package[], monthKey: string): number => {
+  // 1. Independent Gigs (Not linked to a package)
+  const gigIncome = gigs.reduce((acc, gig) => {
+    if (!gig.packageId && gig.paymentDueDate.startsWith(monthKey)) {
+      return acc + gig.paymentAmount;
+    }
+    return acc;
+  }, 0);
+
+  // 2. Packages (Based on Billing Date)
+  const packageIncome = packages.reduce((acc, pkg) => {
+    if (pkg.billingDate && pkg.billingDate.startsWith(monthKey)) {
+      return acc + pkg.totalPrice;
+    }
+    return acc;
+  }, 0);
+
+  return gigIncome + packageIncome;
 };
 
 export const getMonthSummary = (
-    monthKey: string, // YYYY-MM
-    gigs: Gig[],
-    expenses: RecurringExpense[],
-    monthlyInstances: MonthlyExpenseInstance[]
+  monthKey: string, // YYYY-MM
+  gigs: Gig[],
+  packages: Package[],
+  expenses: RecurringExpense[],
+  monthlyInstances: MonthlyExpenseInstance[]
 ) => {
-    // 1. Calculate Expenses
-    const totalExpenses = getTotalExpensesForMonth(expenses, monthlyInstances, monthKey);
+  // 1. Calculate Expenses
+  const totalExpenses = getTotalExpensesForMonth(expenses, monthlyInstances, monthKey);
 
-    // 2. Calculate Income (Based on paymentDueDate in this month)
-    const income = getMonthIncome(gigs, monthKey);
+  // 2. Calculate Income (Based on paymentDueDate in this month + Package Billing)
+  const income = getMonthIncome(gigs, packages, monthKey);
 
-    return {
-        totalExpenses,
-        totalIncome: income,
-        balance: income - totalExpenses
-    };
+  return {
+    totalExpenses,
+    totalIncome: income,
+    balance: income - totalExpenses
+  };
 };
 
 export interface CategoryAnalytics {
-    total: number;
-    count: number;
-    monthlyAverage: number;
-    expenses: RecurringExpense[];
+  total: number;
+  count: number;
+  monthlyAverage: number;
+  expenses: RecurringExpense[];
 }
 
 export interface ExpenseAnalyticsData {
-    totalExpenses: number;
-    categoryBreakdown: Record<string, CategoryAnalytics>;
-    monthlyBreakdown: Record<string, number>;
+  totalExpenses: number;
+  categoryBreakdown: Record<string, CategoryAnalytics>;
+  monthlyBreakdown: Record<string, number>;
 }
 
 export const calculateExpenseAnalytics = (
-    expenses: RecurringExpense[],
-    monthlyInstances: MonthlyExpenseInstance[],
-    startMonth: Date,
-    monthsCount: number,
-    filterCategory: string | 'all' = 'all',
-    filterEssential: 'all' | 'essential' | 'non-essential' = 'all'
+  expenses: RecurringExpense[],
+  monthlyInstances: MonthlyExpenseInstance[],
+  startMonth: Date,
+  monthsCount: number,
+  filterCategory: string | 'all' = 'all',
+  filterEssential: 'all' | 'essential' | 'non-essential' = 'all'
 ): ExpenseAnalyticsData => {
-    
-    // 1. Get the raw grid
-    const grid = getMonthlyExpensesGrid(expenses, monthlyInstances, startMonth, monthsCount);
-    
-    let totalExpenses = 0;
-    const categoryBreakdown: Record<string, CategoryAnalytics> = {};
-    const monthlyBreakdown: Record<string, number> = {};
 
-    // 2. Iterate through grid to aggregate data
-    grid.forEach((monthData, monthKey) => {
-        let monthlyTotal = 0;
+  // 1. Get the raw grid
+  const grid = getMonthlyExpensesGrid(expenses, monthlyInstances, startMonth, monthsCount);
 
-        expenses.forEach(expense => {
-            const amount = monthData[expense.id];
-            
-            // Apply Filters
-            if (amount === undefined || amount === null) return;
-            if (filterCategory !== 'all' && expense.category !== filterCategory) return;
-            if (filterEssential === 'essential' && !expense.isEssential) return;
-            if (filterEssential === 'non-essential' && expense.isEssential) return;
+  let totalExpenses = 0;
+  const categoryBreakdown: Record<string, CategoryAnalytics> = {};
+  const monthlyBreakdown: Record<string, number> = {};
 
-            // Aggregations
-            monthlyTotal += amount;
-            totalExpenses += amount;
+  // 2. Iterate through grid to aggregate data
+  grid.forEach((monthData, monthKey) => {
+    let monthlyTotal = 0;
 
-            const catName = expense.category || 'ללא קטגוריה';
-            if (!categoryBreakdown[catName]) {
-                categoryBreakdown[catName] = { total: 0, count: 0, monthlyAverage: 0, expenses: [] };
-            }
-            
-            categoryBreakdown[catName].total += amount;
-            categoryBreakdown[catName].count += 1; // Count instances of charge
-            
-            // Only add unique expense reference once
-            if (!categoryBreakdown[catName].expenses.find(e => e.id === expense.id)) {
-                categoryBreakdown[catName].expenses.push(expense);
-            }
-        });
+    expenses.forEach(expense => {
+      const amount = monthData[expense.id];
 
-        monthlyBreakdown[monthKey] = monthlyTotal;
+      // Apply Filters
+      if (amount === undefined || amount === null) return;
+      if (filterCategory !== 'all' && expense.category !== filterCategory) return;
+      if (filterEssential === 'essential' && !expense.isEssential) return;
+      if (filterEssential === 'non-essential' && expense.isEssential) return;
+
+      // Aggregations
+      monthlyTotal += amount;
+      totalExpenses += amount;
+
+      const catName = expense.category || 'ללא קטגוריה';
+      if (!categoryBreakdown[catName]) {
+        categoryBreakdown[catName] = { total: 0, count: 0, monthlyAverage: 0, expenses: [] };
+      }
+
+      categoryBreakdown[catName].total += amount;
+      categoryBreakdown[catName].count += 1; // Count instances of charge
+
+      // Only add unique expense reference once
+      if (!categoryBreakdown[catName].expenses.find(e => e.id === expense.id)) {
+        categoryBreakdown[catName].expenses.push(expense);
+      }
     });
 
-    // 3. Finalize Category Averages
-    Object.keys(categoryBreakdown).forEach(cat => {
-        categoryBreakdown[cat].monthlyAverage = categoryBreakdown[cat].total / monthsCount;
-    });
+    monthlyBreakdown[monthKey] = monthlyTotal;
+  });
 
-    return {
-        totalExpenses,
-        categoryBreakdown,
-        monthlyBreakdown
-    };
+  // 3. Finalize Category Averages
+  Object.keys(categoryBreakdown).forEach(cat => {
+    categoryBreakdown[cat].monthlyAverage = categoryBreakdown[cat].total / monthsCount;
+  });
+
+  return {
+    totalExpenses,
+    categoryBreakdown,
+    monthlyBreakdown
+  };
 };

@@ -2,10 +2,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Gig, ParsedGig } from "../types";
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.error("API_KEY environment variable not set.");
+  console.error("VITE_GEMINI_API_KEY environment variable not set.");
   // In a real app, you might want to handle this more gracefully.
   // For this project, we assume it's set.
 }
@@ -45,7 +45,7 @@ export const parseGigFromString = async (text: string): Promise<ParsedGig | null
     const parsedGig = JSON.parse(jsonString);
 
     if (parsedGig.name && parsedGig.paymentAmount && parsedGig.eventDate) {
-        return parsedGig as ParsedGig;
+      return parsedGig as ParsedGig;
     }
     return null;
 
@@ -57,8 +57,8 @@ export const parseGigFromString = async (text: string): Promise<ParsedGig | null
 
 
 export const generateReminderEmail = async (gig: Gig): Promise<string> => {
-    try {
-        const prompt = `
+  try {
+    const prompt = `
             כתוב אימייל תזכורת תשלום מנומס אך תקיף עבור עבודת פרילנס.
             הטון צריך להיות מקצועי וידידותי.
             אנא כלול את הפרטים הבאים באימייל, בעברית:
@@ -70,15 +70,15 @@ export const generateReminderEmail = async (gig: Gig): Promise<string> => {
             התחל בפנייה ידידותית וסיים בסגירה מקצועית.
             שמור על אימייל תמציתי.
         `;
-        
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-        });
 
-        return response.text;
-    } catch (error) {
-        console.error("Error generating reminder email:", error);
-        return "אירעה שגיאה ביצירת התזכורת. אנא נסה שוב.";
-    }
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    return response.text;
+  } catch (error) {
+    console.error("Error generating reminder email:", error);
+    return "אירעה שגיאה ביצירת התזכורת. אנא נסה שוב.";
+  }
 };

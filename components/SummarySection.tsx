@@ -24,16 +24,16 @@ const SummaryCard: React.FC<{ title: string; value: React.ReactNode; description
         <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
       </div>
     </div>
-    {description && 
+    {description &&
       <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-slate-100 dark:border-gray-700/50">
-          <InformationCircleIcon className="w-4 h-4 mt-0.5 flex-shrink-0"/>
-          <p>{description}</p>
+        <InformationCircleIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <p>{description}</p>
       </div>
     }
   </div>
 );
 
-const SummaryView: React.FC<SummarySectionProps> = ({gigs, expenses, monthlyInstances, packages = []}) => {
+const SummaryView: React.FC<SummarySectionProps> = ({ gigs, expenses, monthlyInstances, packages = [] }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const changeMonth = (amount: number) => {
@@ -66,7 +66,7 @@ const SummaryView: React.FC<SummarySectionProps> = ({gigs, expenses, monthlyInst
     const incomeThisMonthGigs = independentGigs
       .filter(g => g.status === GigStatus.Paid && isInMonth(g.paymentDueDate))
       .reduce((sum, g) => sum + g.paymentAmount, 0);
-      
+
     // Projected Gigs (Pending, Due this month, Not Overdue relative to today)
     const expectedThisMonthGigs = independentGigs
       .filter(g => g.status === GigStatus.Pending && isInMonth(g.paymentDueDate) && g.paymentDueDate >= todayStr)
@@ -81,21 +81,21 @@ const SummaryView: React.FC<SummarySectionProps> = ({gigs, expenses, monthlyInst
     // --- 2. CALCULATE PACKAGES REVENUE ---
     // Packages are filtered by their billingDate.
     // Only packages with a billingDate are considered for revenue (Unbilled are ignored).
-    
+
     // Paid Packages (Billing Date in this month)
     const packageRevenuePaid = packages
-        .filter(p => p.billingDate && isInMonth(p.billingDate) && p.status === GigStatus.Paid)
-        .reduce((sum, p) => sum + p.totalPrice, 0);
+      .filter(p => p.billingDate && isInMonth(p.billingDate) && p.status === GigStatus.Paid)
+      .reduce((sum, p) => sum + p.totalPrice, 0);
 
     // Projected Packages (Billing Date in this month, Pending, Not Overdue)
     const packageRevenueProjected = packages
-        .filter(p => p.billingDate && isInMonth(p.billingDate) && p.status === GigStatus.Pending && p.billingDate >= todayStr)
-        .reduce((sum, p) => sum + p.totalPrice, 0);
+      .filter(p => p.billingDate && isInMonth(p.billingDate) && p.status === GigStatus.Pending && p.billingDate >= todayStr)
+      .reduce((sum, p) => sum + p.totalPrice, 0);
 
     // Overdue Packages (Global backlog: Pending and Billing Date < Today)
     const packageRevenueOverdue = packages
-        .filter(p => p.billingDate && p.status === GigStatus.Pending && p.billingDate < todayStr)
-        .reduce((sum, p) => sum + p.totalPrice, 0);
+      .filter(p => p.billingDate && p.status === GigStatus.Pending && p.billingDate < todayStr)
+      .reduce((sum, p) => sum + p.totalPrice, 0);
 
 
     // --- 3. TOTALS ---
@@ -105,20 +105,20 @@ const SummaryView: React.FC<SummarySectionProps> = ({gigs, expenses, monthlyInst
 
     // --- 4. EXPENSES & BALANCE ---
     // New Expense & Balance Logic
-    const { totalExpenses } = getMonthSummary(monthStr, gigs, expenses, monthlyInstances);
-    
+    const { totalExpenses } = getMonthSummary(monthStr, gigs, packages, expenses, monthlyInstances);
+
     // Total Expected Income for Balance calculation = Paid + Projected (All revenue sources for the month)
     // Note: We don't include global overdue here, usually balance forecasts look at the specific month's expected flow.
     const totalExpectedIncome = incomeThisMonth + expectedThisMonth;
     const balance = totalExpectedIncome - totalExpenses;
 
-    return { 
-        incomeThisMonth, 
-        expectedThisMonth, 
-        overdueTotal,
-        totalExpenses,
-        totalExpectedIncome, 
-        balance
+    return {
+      incomeThisMonth,
+      expectedThisMonth,
+      overdueTotal,
+      totalExpenses,
+      totalExpectedIncome,
+      balance
     };
   }, [gigs, expenses, monthlyInstances, packages, currentDate]);
 
@@ -129,47 +129,47 @@ const SummaryView: React.FC<SummarySectionProps> = ({gigs, expenses, monthlyInst
           <ChevronLeftIcon className="w-5 h-5" />
         </button>
         <div className="flex flex-col items-center">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{getMonthHebrew(currentDate)}</h2>
-            <button onClick={goToToday} className="text-xs font-medium text-primary-600 hover:underline">חזור להיום</button>
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">{getMonthHebrew(currentDate)}</h2>
+          <button onClick={goToToday} className="text-xs font-medium text-primary-600 hover:underline">חזור להיום</button>
         </div>
         <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors">
           <ChevronRightIcon className="w-5 h-5" />
         </button>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Balance Card - The Highlights */}
-        <SummaryCard 
-          title="מאזן חודשי" 
+        <SummaryCard
+          title="מאזן חודשי"
           value={
             <span className={summaryData.balance < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}>
-                {formatCurrency(summaryData.balance)}
+              {formatCurrency(summaryData.balance)}
             </span>
           }
           description={`הכנסות: ${formatCurrency(summaryData.totalExpectedIncome)} | הוצאות: ${formatCurrency(summaryData.totalExpenses)}`}
-          icon={summaryData.balance >= 0 ? <ArrowUpTrayIcon className="w-6 h-6"/> : <ArrowDownTrayIcon className="w-6 h-6"/>}
+          icon={summaryData.balance >= 0 ? <ArrowUpTrayIcon className="w-6 h-6" /> : <ArrowDownTrayIcon className="w-6 h-6" />}
           accentColor={summaryData.balance >= 0 ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"}
         />
 
-        <SummaryCard 
-          title="הכנסות (שולם)" 
-          value={formatCurrency(summaryData.incomeThisMonth)} 
+        <SummaryCard
+          title="הכנסות (שולם)"
+          value={formatCurrency(summaryData.incomeThisMonth)}
           description="מזומן שנכנס בפועל בחודש זה (כולל חבילות)."
-          icon={<CurrencyDollarIcon className="w-6 h-6"/>}
+          icon={<CurrencyDollarIcon className="w-6 h-6" />}
         />
-        
-        <SummaryCard 
-          title="צפוי להיכנס" 
-          value={formatCurrency(summaryData.expectedThisMonth)} 
+
+        <SummaryCard
+          title="צפוי להיכנס"
+          value={formatCurrency(summaryData.expectedThisMonth)}
           description="תשלומים עתידיים וחבילות שמועד פירעונם החודש."
-          icon={<ChartBarIcon className="w-6 h-6"/>}
+          icon={<ChartBarIcon className="w-6 h-6" />}
         />
-        
-        <SummaryCard 
-          title="באיחור (סה״כ)" 
-          value={formatCurrency(summaryData.overdueTotal)} 
+
+        <SummaryCard
+          title="באיחור (סה״כ)"
+          value={formatCurrency(summaryData.overdueTotal)}
           description="כל התשלומים שטרם התקבלו ומועדם עבר."
-          icon={<InformationCircleIcon className="w-6 h-6"/>}
+          icon={<InformationCircleIcon className="w-6 h-6" />}
           accentColor="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
         />
       </div>

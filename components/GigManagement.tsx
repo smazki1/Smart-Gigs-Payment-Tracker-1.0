@@ -8,7 +8,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, CheckCircleIc
 
 // --- Smart Add Component ---
 interface SmartAddComponentProps {
-  onSmartAdd: (parsedGig: ParsedGig) => void;
+    onSmartAdd: (parsedGig: ParsedGig) => void;
 }
 const SmartAddComponent: React.FC<SmartAddComponentProps> = ({ onSmartAdd }) => {
     const [text, setText] = useState('');
@@ -32,7 +32,7 @@ const SmartAddComponent: React.FC<SmartAddComponentProps> = ({ onSmartAdd }) => 
     return (
         <div className="p-4 md:p-6 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-md border border-slate-200 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-3">
-                <SparklesIcon className="w-6 h-6 text-primary-500"/>
+                <SparklesIcon className="w-6 h-6 text-primary-500" />
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">הוספה חכמה עם AI</h3>
             </div>
             <textarea
@@ -56,14 +56,14 @@ const SmartAddComponent: React.FC<SmartAddComponentProps> = ({ onSmartAdd }) => 
 
 // --- Gig Item Component ---
 interface GigItemProps {
-  gig: Gig;
-  isSelected: boolean;
-  onToggleSelection: (id: string) => void;
-  onEdit: (gig: Gig) => void;
-  onSave: (gig: Partial<Gig> & { id: string }) => void;
-  onDelete: (gig: Gig) => void;
-  onMarkAsPaid: (gig: Gig) => void;
-  onAIReminder: (gig: Gig) => void;
+    gig: Gig;
+    isSelected: boolean;
+    onToggleSelection: (id: string) => void;
+    onEdit: (gig: Gig) => void;
+    onSave: (gig: Partial<Gig> & { id: string }) => void;
+    onDelete: (gig: Gig) => void;
+    onMarkAsPaid: (gig: Gig) => void;
+    onAIReminder: (gig: Gig) => void;
 }
 const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleSelection, onEdit, onSave, onDelete, onMarkAsPaid, onAIReminder }) => {
     const [isEditingName, setIsEditingName] = useState(false);
@@ -91,7 +91,7 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
             setIsEditingName(false);
         }
     };
-    
+
     const overdue = isOverdue(gig);
     const statusMap = {
         [GigStatus.Paid]: { text: 'שולם', color: 'green', Icon: CheckCircleIcon },
@@ -105,15 +105,18 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
     };
 
     return (
-        <div className={`p-4 rounded-xl shadow-sm border transition-all duration-200 ${isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-gray-800/50 border-slate-200 dark:border-gray-800 hover:shadow-md'}`}>
+        <div className={`p-4 rounded-xl shadow-sm border transition-all duration-200 ${gig.backgroundColor
+                ? `${gig.backgroundColor} text-white border-transparent ${isSelected ? 'ring-2 ring-offset-2 ring-primary-500' : 'hover:shadow-md'}`
+                : `${isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-gray-800/50 border-slate-200 dark:border-gray-800 hover:shadow-md'}`
+            }`}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                 <div className="flex items-start gap-4 flex-1 min-w-0">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
                     <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => onToggleSelection(gig.id)}
                         aria-label={`Select gig ${gig.name}`}
-                        className="mt-1 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer flex-shrink-0"
+                        className={`mt-1 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer flex-shrink-0 ${gig.backgroundColor ? 'bg-white/20 border-white/40 text-white' : ''}`}
                     />
                     <div className="flex-1 min-w-0">
                         {isEditingName ? (
@@ -127,24 +130,24 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
                                 className="font-semibold text-lg bg-slate-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md p-1 -m-1 w-full focus:ring-2 focus:ring-primary-500 focus:outline-none"
                             />
                         ) : (
-                        <div>
-                                <p onDoubleClick={() => setIsEditingName(true)} className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-text" title="Double-click to edit">
+                            <div>
+                                <p onDoubleClick={() => setIsEditingName(true)} className={`font-semibold text-lg truncate cursor-text ${gig.backgroundColor ? 'text-white' : 'text-gray-900 dark:text-white'}`} title="Double-click to edit">
                                     {gig.name}
                                 </p>
-                                {gig.supplierName && <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{gig.supplierName}</p>}
+                                {gig.supplierName && <p className={`text-sm truncate ${gig.backgroundColor ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>{gig.supplierName}</p>}
                             </div>
                         )}
-                        <div className="flex items-center space-x-4 rtl:space-x-reverse mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${statusColors[currentStatus.color]}`}>
+                        <div className={`flex items-center space-x-4 rtl:space-x-reverse mt-2 text-sm ${gig.backgroundColor ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full ${gig.backgroundColor ? 'bg-white/20 text-white border border-white/20' : statusColors[currentStatus.color]}`}>
                                 <currentStatus.Icon className="w-3.5 h-3.5" />
                                 {currentStatus.text}
                             </span>
                             <div className="flex items-center gap-2">
-                                <CalendarDaysIcon className="w-4 h-4"/>
+                                <CalendarDaysIcon className="w-4 h-4" />
                                 <span>אירוע: {formatDate(gig.eventDate)}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <CurrencyDollarIcon className="w-4 h-4"/>
+                                <CurrencyDollarIcon className="w-4 h-4" />
                                 <span>לתשלום עד: {formatDate(gig.paymentDueDate)}</span>
                             </div>
                             {gig.notes && <ChatBubbleBottomCenterTextIcon className="w-4 h-4" title={gig.notes} />}
@@ -154,18 +157,18 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
                 </div>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="flex-1 sm:flex-auto text-right">
-                        <p className="text-xl font-bold text-primary-600 dark:text-primary-400">{formatCurrency(gig.paymentAmount)}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">כולל מע״מ: {formatCurrency(gig.paymentAmount * (1 + VAT_RATE))}</p>
+                        <p className={`text-xl font-bold ${gig.backgroundColor ? 'text-white' : 'text-primary-600 dark:text-primary-400'}`}>{formatCurrency(gig.paymentAmount)}</p>
+                        <p className={`text-xs ${gig.backgroundColor ? 'text-white/70' : 'text-gray-400 dark:text-gray-500'}`}>כולל מע״מ: {formatCurrency(gig.paymentAmount * (1 + VAT_RATE))}</p>
                     </div>
-                    <div className="flex space-x-1 rtl:space-x-reverse bg-slate-100 dark:bg-gray-700/50 p-1 rounded-lg">
+                    <div className={`flex space-x-1 rtl:space-x-reverse p-1 rounded-lg ${gig.backgroundColor ? 'bg-black/10' : 'bg-slate-100 dark:bg-gray-700/50'}`}>
                         {gig.status === GigStatus.Pending && (
                             <>
-                                <button onClick={() => onMarkAsPaid(gig)} title="סמן כשולם" className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-md transition-colors"><CheckCircleIcon className="w-5 h-5"/></button>
-                                <button onClick={() => onAIReminder(gig)} title="תזכורת AI" className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-md transition-colors"><PaperAirplaneIcon className="w-5 h-5"/></button>
+                                <button onClick={() => onMarkAsPaid(gig)} title="סמן כשולם" className={`p-2 rounded-md transition-colors ${gig.backgroundColor ? 'text-white hover:bg-white/20' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/50'}`}><CheckCircleIcon className="w-5 h-5" /></button>
+                                <button onClick={() => onAIReminder(gig)} title="תזכורת AI" className={`p-2 rounded-md transition-colors ${gig.backgroundColor ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50'}`}><PaperAirplaneIcon className="w-5 h-5" /></button>
                             </>
                         )}
-                        <button onClick={() => onEdit(gig)} title="עריכה" className="p-2 text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-900/50 rounded-md transition-colors"><PencilIcon className="w-5 h-5"/></button>
-                        <button onClick={() => onDelete(gig)} title="מחיקה" className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition-colors"><TrashIcon className="w-5 h-5"/></button>
+                        <button onClick={() => onEdit(gig)} title="עריכה" className={`p-2 rounded-md transition-colors ${gig.backgroundColor ? 'text-white hover:bg-white/20' : 'text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-900/50'}`}><PencilIcon className="w-5 h-5" /></button>
+                        <button onClick={() => onDelete(gig)} title="מחיקה" className={`p-2 rounded-md transition-colors ${gig.backgroundColor ? 'text-white hover:bg-white/20' : 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50'}`}><TrashIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
@@ -175,24 +178,24 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
 
 // --- List View Component ---
 interface ListViewProps extends Omit<GigItemProps, 'gig' | 'isSelected' | 'onToggleSelection'> {
-  gigs: Gig[];
-  selectedGigs: Set<string>;
-  onToggleSelection: (id: string) => void;
+    gigs: Gig[];
+    selectedGigs: Set<string>;
+    onToggleSelection: (id: string) => void;
 }
 const ListView: React.FC<ListViewProps> = ({ gigs, selectedGigs, onToggleSelection, ...props }) => {
-  return (
-    <div className="space-y-3">
-      {gigs.length > 0 ? (
-        gigs.map(gig => <GigItem key={gig.id} gig={gig} isSelected={selectedGigs.has(gig.id)} onToggleSelection={onToggleSelection} {...props} />)
-      ) : (
-        <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-gray-800 rounded-lg">
-          <CalendarDaysIcon className="mx-auto w-12 h-12 text-gray-300 dark:text-gray-600" />
-          <h3 className="mt-2 text-lg font-medium text-gray-800 dark:text-gray-200">אין אירועים להצגה</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">נסו לשנות את המסננים או להוסיף אירוע חדש.</p>
+    return (
+        <div className="space-y-3">
+            {gigs.length > 0 ? (
+                gigs.map(gig => <GigItem key={gig.id} gig={gig} isSelected={selectedGigs.has(gig.id)} onToggleSelection={onToggleSelection} {...props} />)
+            ) : (
+                <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-gray-800 rounded-lg">
+                    <CalendarDaysIcon className="mx-auto w-12 h-12 text-gray-300 dark:text-gray-600" />
+                    <h3 className="mt-2 text-lg font-medium text-gray-800 dark:text-gray-200">אין אירועים להצגה</h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">נסו לשנות את המסננים או להוסיף אירוע חדש.</p>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 
@@ -225,7 +228,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
             return newDate;
         });
     };
-    
+
     const goToToday = () => setCurrentDate(new Date());
 
     const daysOfWeek = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
@@ -270,7 +273,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const handleDragStart = (e: React.DragEvent, gig: Gig) => {
         e.dataTransfer.setData('application/json', JSON.stringify(gig));
         e.dataTransfer.effectAllowed = 'move';
@@ -297,15 +300,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
     return (
         <div className="bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-gray-800">
             <div className="flex justify-between items-center mb-4">
-                 <button onClick={() => changeMonth(1)} aria-label="החודש הבא" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    <ChevronLeftIcon className="w-5 h-5"/>
+                <button onClick={() => changeMonth(1)} aria-label="החודש הבא" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    <ChevronLeftIcon className="w-5 h-5" />
                 </button>
                 <div className="text-center">
                     <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{getMonthHebrew(currentDate)}</h3>
                     <button onClick={goToToday} className="text-xs font-medium text-primary-600 hover:underline">חזור להיום</button>
                 </div>
                 <button onClick={() => changeMonth(-1)} aria-label="החודש הקודם" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    <ChevronRightIcon className="w-5 h-5"/>
+                    <ChevronRightIcon className="w-5 h-5" />
                 </button>
             </div>
             <div className="grid grid-cols-7 text-center font-semibold text-sm text-gray-500 dark:text-gray-400 mb-2">
@@ -324,21 +327,20 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                     const isDragOver = dragOverDate === dateStr;
 
                     return (
-                        <div 
-                            key={index} 
+                        <div
+                            key={index}
                             onClick={() => isCurrentMonth && onAdd(dateStr)}
                             onDragOver={(e) => isCurrentMonth && handleDragOver(e, dateStr)}
                             onDragLeave={() => setDragOverDate(null)}
                             onDrop={(e) => isCurrentMonth && handleDrop(e, dateStr)}
-                             className={`relative min-h-[8rem] border-b border-l border-gray-200 dark:border-gray-700 p-2 flex flex-col transition-colors duration-200 ${
-                                isHoliday ? 'bg-green-50 dark:bg-green-900/40' :
-                                isCurrentMonth ? 'bg-white dark:bg-gray-800/50' : 'bg-slate-50 dark:bg-gray-900/50'
-                            } ${isDragOver ? 'bg-primary-100 dark:bg-primary-900/50' : isCurrentMonth && !isHoliday ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-700/50' : isCurrentMonth && isHoliday ? 'cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/60' : ''}`}
+                            className={`relative min-h-[8rem] border-b border-l border-gray-200 dark:border-gray-700 p-2 flex flex-col transition-colors duration-200 ${isHoliday ? 'bg-green-50 dark:bg-green-900/40' :
+                                    isCurrentMonth ? 'bg-white dark:bg-gray-800/50' : 'bg-slate-50 dark:bg-gray-900/50'
+                                } ${isDragOver ? 'bg-primary-100 dark:bg-primary-900/50' : isCurrentMonth && !isHoliday ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-700/50' : isCurrentMonth && isHoliday ? 'cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/60' : ''}`}
                         >
                             <span className={`self-start font-medium flex justify-center items-center h-7 w-7 rounded-full text-sm ${isToday ? 'bg-primary-600 text-white' : isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
                                 {day}
                             </span>
-                             {isCurrentMonth && (
+                            {isCurrentMonth && (
                                 <div className="flex-1 overflow-y-auto mt-1 space-y-1">
                                     {isHoliday && (
                                         <div className="text-center text-xs text-green-800 dark:text-green-300 font-semibold mb-1 truncate" title={holidayName}>
@@ -346,10 +348,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                                         </div>
                                     )}
                                     {dayGigs.map(gig => {
-                                         const overdue = isOverdue(gig);
-                                         const statusColor = gig.status === GigStatus.Paid ? 'bg-green-500' :
-                                                             overdue ? 'bg-red-500' :
-                                                             'bg-yellow-500';
+                                        const overdue = isOverdue(gig);
+                                        const statusColor = gig.status === GigStatus.Paid ? 'bg-green-500' :
+                                            overdue ? 'bg-red-500' :
+                                                'bg-yellow-500';
                                         return (
                                             <div
                                                 key={gig.id}
@@ -406,7 +408,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
     const [sortCriteria, setSortCriteria] = useState('eventDate-desc');
     const [dateFilter, setDateFilter] = useState<DateFilter>('all');
     const [selectedGigs, setSelectedGigs] = useState<Set<string>>(new Set());
-    
+
     const filteredGigs = useMemo(() => {
         return gigs
             .filter(gig => {
@@ -441,7 +443,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                         if (!gig.eventDate.startsWith(String(year))) return false;
                     }
                 }
-                
+
                 return true;
             })
             .sort((a, b) => {
@@ -456,7 +458,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                         valB = b.paymentAmount;
                         break;
                     case 'name':
-                         return sortDirection === 'asc' ? (a.name || '').localeCompare(b.name || '', 'he') : (b.name || '').localeCompare(a.name || '', 'he');
+                        return sortDirection === 'asc' ? (a.name || '').localeCompare(b.name || '', 'he') : (b.name || '').localeCompare(a.name || '', 'he');
                     case 'supplierName':
                         return sortDirection === 'asc' ? (a.supplierName || '').localeCompare(b.supplierName || '', 'he') : (b.supplierName || '').localeCompare(a.supplierName || '', 'he');
                     default:
@@ -489,7 +491,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
             setSelectedGigs(new Set(filteredGigs.map(g => g.id)));
         }
     };
-    
+
     const handleAddFromCalendar = (date: string) => {
         onAdd(date);
     };
@@ -497,22 +499,22 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
     return (
         <div className="p-4 md:p-6 space-y-6">
             <SmartAddComponent onSmartAdd={onSmartAdd} />
-            
+
             <div className="space-y-4">
-                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-3 bg-white/50 dark:bg-gray-800/30 border border-slate-200 dark:border-gray-800 rounded-lg">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-3 bg-white/50 dark:bg-gray-800/30 border border-slate-200 dark:border-gray-800 rounded-lg">
                     <div className="p-1 rounded-lg bg-slate-100 dark:bg-gray-700/50 flex">
-                        <button onClick={() => setActiveView('list')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'list' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}> <ListBulletIcon/> רשימה </button>
-                        <button onClick={() => setActiveView('calendar')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'calendar' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}><CalendarDaysIcon/> לוח שנה</button>
+                        <button onClick={() => setActiveView('list')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'list' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}> <ListBulletIcon /> רשימה </button>
+                        <button onClick={() => setActiveView('calendar')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${activeView === 'calendar' ? 'bg-white dark:bg-gray-600 text-primary-600 shadow-sm' : 'text-gray-600 dark:text-gray-300'}`}><CalendarDaysIcon /> לוח שנה</button>
                     </div>
 
                     {activeView === 'list' && (
                         <div className="flex-1 flex flex-col sm:flex-row gap-2 w-full">
-                             <div className="flex items-center gap-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg px-3 flex-shrink-0">
+                            <div className="flex items-center gap-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg px-3 flex-shrink-0">
                                 <input id="select-all" type="checkbox" onChange={handleToggleSelectAll} checked={filteredGigs.length > 0 && selectedGigs.size === filteredGigs.length} className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer" />
                                 <label htmlFor="select-all" className="text-sm font-medium text-gray-700 dark:text-gray-300 pr-1 py-2 cursor-pointer">בחר הכל</label>
                             </div>
                             <input type="text" placeholder="חיפוש לפי שם או ספק..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full sm:flex-1 p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500" />
-                             <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as DateFilter)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
+                            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as DateFilter)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
                                 <option value="all">כל הזמנים</option>
                                 <option value="thisMonth">חודש נוכחי</option>
                                 <option value="lastMonth">חודש שעבר</option>
@@ -524,7 +526,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                                 <option value="Paid">שולם</option>
                                 <option value="Overdue">באיחור</option>
                             </select>
-                             <select value={sortCriteria} onChange={(e) => setSortCriteria(e.target.value)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
+                            <select value={sortCriteria} onChange={(e) => setSortCriteria(e.target.value)} className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
                                 <option value="eventDate-desc">מיון: תאריך אירוע (חדש › ישן)</option>
                                 <option value="eventDate-asc">מיון: תאריך אירוע (ישן › חדש)</option>
                                 <option value="paymentAmount-desc">מיון: סכום (גבוה › נמוך)</option>
@@ -535,12 +537,12 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                             </select>
                         </div>
                     )}
-                    
+
                     <button onClick={() => onAdd()} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors shadow-sm">
-                        <PlusIcon className="w-4 h-4"/> הוסף אירוע
+                        <PlusIcon className="w-4 h-4" /> הוסף אירוע
                     </button>
                 </div>
-                
+
                 {activeView === 'list' ? (
                     <ListView gigs={filteredGigs} selectedGigs={selectedGigs} onToggleSelection={handleToggleSelection} {...itemProps} />
                 ) : (
@@ -559,7 +561,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                         }}
                         className="flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
                     >
-                        <CheckCircleIcon className="w-5 h-5"/> סמן כשולם
+                        <CheckCircleIcon className="w-5 h-5" /> סמן כשולם
                     </button>
                     <button
                         onClick={() => {
@@ -567,7 +569,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                         }}
                         className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 transition-colors"
                     >
-                        <TrashIcon className="w-5 h-5"/> מחק
+                        <TrashIcon className="w-5 h-5" /> מחק
                     </button>
                     <button
                         onClick={() => setSelectedGigs(new Set())}

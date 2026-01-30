@@ -20,6 +20,7 @@ export interface Package {
   maxHours: number;
   status: GigStatus; // To track if the package itself is paid
   createdAt: string;
+  backgroundColor?: string;
 }
 
 export interface Gig {
@@ -39,6 +40,7 @@ export interface Gig {
   // Package Linking
   packageId?: string; // If linked to a package
   usageType?: 'workshop' | 'consulting'; // How it counts towards the package quota
+  backgroundColor?: string;
 }
 
 export type GigFilterStatus = 'All' | 'Pending' | 'Paid' | 'Overdue';
@@ -71,6 +73,7 @@ export interface RecurringExpense {
 }
 
 export interface MonthlyExpenseInstance {
+  id?: string; // Firestore ID
   monthKey: string; // YYYY-MM
   amount: number;
   sourceRecurringExpenseId?: string;
