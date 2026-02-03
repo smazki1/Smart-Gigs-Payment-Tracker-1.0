@@ -93,7 +93,7 @@ const PackageCard: React.FC<{ pkg: Package; usage: { usedWorkshops: number; used
                 </div>
 
                 {/* Details Toggle */}
-                {usage.usedHoursGigs.length > 0 && (
+                {usage.usedHoursGigs && usage.usedHoursGigs.length > 0 && (
                     <div className="pt-2">
                         <button
                             onClick={() => setShowDetails(!showDetails)}

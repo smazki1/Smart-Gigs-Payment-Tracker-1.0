@@ -223,7 +223,7 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
 
     const handleSave = () => {
         const gigToSave: Gig = {
-            id: gig?.id || crypto.randomUUID(),
+            id: gig?.id || (Date.now().toString(36) + Math.random().toString(36).substr(2)),
             createdAt: gig?.createdAt || new Date().toISOString(),
             status: gig?.status || GigStatus.Pending,
             name: formData.name,
