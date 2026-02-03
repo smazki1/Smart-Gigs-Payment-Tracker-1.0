@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import type { Package, Gig } from '../types';
 import { formatCurrency, formatDate } from '../utils/helpers';
-import { PlusIcon, PencilIcon, TrashIcon, CheckCircleIcon, BriefcaseIcon, InformationCircleIcon } from './icons';
+import { PlusIcon, PencilIcon, TrashIcon, CheckCircleIcon, BriefcaseIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, CalendarDaysIcon } from './icons';
 
 interface PackagesManagerProps {
     packages: Package[];
@@ -12,7 +12,8 @@ interface PackagesManagerProps {
     onDeletePackage: (pkg: Package) => void;
 }
 
-const PackageCard: React.FC<{ pkg: Package; usage: { usedWorkshops: number; usedHours: number }; onEdit: () => void; onDelete: () => void; isUnbilled?: boolean }> = ({ pkg, usage, onEdit, onDelete, isUnbilled }) => {
+const PackageCard: React.FC<{ pkg: Package; usage: { usedWorkshops: number; usedHours: number; usedHoursGigs: Gig[] }; onEdit: () => void; onDelete: () => void; isUnbilled?: boolean }> = ({ pkg, usage, onEdit, onDelete, isUnbilled }) => {
+    const [showDetails, setShowDetails] = React.useState(false);
     const workshopProgress = pkg.maxWorkshops > 0 ? (usage.usedWorkshops / pkg.maxWorkshops) * 100 : 0;
     const hoursProgress = pkg.maxHours > 0 ? (usage.usedHours / pkg.maxHours) * 100 : 0;
 
@@ -90,6 +91,34 @@ const PackageCard: React.FC<{ pkg: Package; usage: { usedWorkshops: number; used
                     </div>
                     {hoursProgress > 100 && <p className={`text-xs mt-1 ${pkg.backgroundColor ? 'text-white font-bold' : 'text-red-500'}`}>חריגה מהבנק!</p>}
                 </div>
+
+                {/* Details Toggle */}
+                {usage.usedHoursGigs.length > 0 && (
+                    <div className="pt-2">
+                        <button
+                            onClick={() => setShowDetails(!showDetails)}
+                            className={`flex items-center gap-1 text-xs font-medium focus:outline-none ${pkg.backgroundColor ? 'text-white/90 hover:text-white' : 'text-primary-600 hover:text-primary-700 dark:text-primary-400'}`}
+                        >
+                            {showDetails ? <ChevronUpIcon className="w-3 h-3" /> : <ChevronDownIcon className="w-3 h-3" />}
+                            {showDetails ? 'הסתר פירוט שעות' : 'הצג פירוט שעות'}
+                        </button>
+
+                        {showDetails && (
+                            <div className={`mt-3 space-y-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin ${pkg.backgroundColor ? 'scrollbar-thumb-white/20' : 'scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600'}`}>
+                                {usage.usedHoursGigs.map(g => (
+                                    <div key={g.id} className={`flex justify-between items-center text-xs p-2 rounded ${pkg.backgroundColor ? 'bg-white/10 text-white' : 'bg-slate-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}>
+                                        <div className="flex items-center gap-2 truncate">
+                                            <CalendarDaysIcon className="w-3 h-3 opacity-70" />
+                                            <span className="truncate max-w-[120px]" title={g.name}>{g.name}</span>
+                                            <span className="opacity-70 text-[10px]">{formatDate(g.eventDate)}</span>
+                                        </div>
+                                        <span className="font-semibold whitespace-nowrap">{g.duration} שעות</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -102,11 +131,10 @@ const PackagesManager: React.FC<PackagesManagerProps> = ({ packages, gigs, onAdd
         const linkedGigs = gigs.filter(g => g.packageId === pkgId);
 
         const usedWorkshops = linkedGigs.filter(g => g.usageType === 'workshop').length;
-        const usedHours = linkedGigs
-            .filter(g => g.usageType === 'consulting')
-            .reduce((sum, g) => sum + (parseFloat(String(g.duration || 0)) || 0), 0);
+        const usedHoursGigs = linkedGigs.filter(g => g.usageType === 'consulting');
+        const usedHours = usedHoursGigs.reduce((sum, g) => sum + (parseFloat(String(g.duration || 0)) || 0), 0);
 
-        return { usedWorkshops, usedHours };
+        return { usedWorkshops, usedHours, usedHoursGigs };
     };
 
     const unbilledPackages = useMemo(() => packages.filter(p => !p.billingDate), [packages]);

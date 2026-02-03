@@ -106,8 +106,8 @@ const GigItem: React.FC<GigItemProps> = React.memo(({ gig, isSelected, onToggleS
 
     return (
         <div className={`p-4 rounded-xl shadow-sm border transition-all duration-200 ${gig.backgroundColor
-                ? `${gig.backgroundColor} text-white border-transparent ${isSelected ? 'ring-2 ring-offset-2 ring-primary-500' : 'hover:shadow-md'}`
-                : `${isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-gray-800/50 border-slate-200 dark:border-gray-800 hover:shadow-md'}`
+            ? `${gig.backgroundColor} text-white border-transparent ${isSelected ? 'ring-2 ring-offset-2 ring-primary-500' : 'hover:shadow-md'}`
+            : `${isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700' : 'bg-white dark:bg-gray-800/50 border-slate-200 dark:border-gray-800 hover:shadow-md'}`
             }`}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -334,7 +334,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                             onDragLeave={() => setDragOverDate(null)}
                             onDrop={(e) => isCurrentMonth && handleDrop(e, dateStr)}
                             className={`relative min-h-[8rem] border-b border-l border-gray-200 dark:border-gray-700 p-2 flex flex-col transition-colors duration-200 ${isHoliday ? 'bg-green-50 dark:bg-green-900/40' :
-                                    isCurrentMonth ? 'bg-white dark:bg-gray-800/50' : 'bg-slate-50 dark:bg-gray-900/50'
+                                isCurrentMonth ? 'bg-white dark:bg-gray-800/50' : 'bg-slate-50 dark:bg-gray-900/50'
                                 } ${isDragOver ? 'bg-primary-100 dark:bg-primary-900/50' : isCurrentMonth && !isHoliday ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-700/50' : isCurrentMonth && isHoliday ? 'cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/60' : ''}`}
                         >
                             <span className={`self-start font-medium flex justify-center items-center h-7 w-7 rounded-full text-sm ${isToday ? 'bg-primary-600 text-white' : isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
@@ -349,16 +349,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                                     )}
                                     {dayGigs.map(gig => {
                                         const overdue = isOverdue(gig);
-                                        const statusColor = gig.status === GigStatus.Paid ? 'bg-green-500' :
+                                        const statusColor = gig.backgroundColor || (gig.status === GigStatus.Paid ? 'bg-green-500' :
                                             overdue ? 'bg-red-500' :
-                                                'bg-yellow-500';
+                                                'bg-yellow-500');
                                         return (
                                             <div
                                                 key={gig.id}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, gig)}
                                                 className="group relative cursor-grab active:cursor-grabbing"
-                                                title={gig.name}
+                                                title={`${gig.name} (Debug Color: ${gig.backgroundColor})`}
                                             >
                                                 <div
                                                     onClick={(e) => { e.stopPropagation(); onEdit(gig); }}
