@@ -402,7 +402,7 @@ interface GigManagementProps extends Omit<GigItemProps, 'gig' | 'isSelected' | '
 type DateFilter = 'all' | 'thisMonth' | 'lastMonth' | 'thisYear';
 
 const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, onReschedule, onBulkMarkAsPaid, onBulkDelete, ...itemProps }) => {
-    const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+    const [activeView, setActiveView] = useState<'list' | 'calendar'>('calendar');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<GigFilterStatus>('All');
     const [sortCriteria, setSortCriteria] = useState('eventDate-desc');
