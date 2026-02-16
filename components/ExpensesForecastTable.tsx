@@ -3,7 +3,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { RecurringExpense, MonthlyExpenseInstance, Gig, Package } from '../types';
 import { getMonthlyExpensesGrid, getTotalExpensesForMonth, getMonthIncome } from '../services/expenseService';
 import { formatCurrency, getMonthHebrew } from '../utils/helpers';
-import { PencilIcon, TrashIcon, PlusIcon, CheckCircleIcon, XMarkIcon, InformationCircleIcon } from './icons';
+import { PencilIcon, TrashIcon, PlusIcon, CheckCircleIcon, XMarkIcon, InformationCircleIcon, ArrowDownTrayIcon } from './icons';
 import { MonthlyExpenseOverrideModal } from './Modals';
 
 interface ExpensesForecastTableProps {
@@ -178,6 +178,57 @@ const ExpensesForecastTable: React.FC<ExpensesForecastTableProps> = ({
         }
     };
 
+    const handleDownloadCSV = () => {
+        const escapeCsv = (val: string | number) => {
+            const str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        // Headers
+        const headers = ['שם ההוצאה', 'קטגוריה', 'יום חיוב', ...monthHeaders.map(m => m.label)].map(escapeCsv);
+
+        // Rows
+        const rows = expenses.map(expense => {
+            return [
+                expense.name,
+                expense.category,
+                expense.chargeDayRule || '',
+                ...monthHeaders.map(header => {
+                    const amount = expensesGrid.get(header.key)?.[expense.id];
+                    return amount !== undefined ? amount : '';
+                })
+            ].map(escapeCsv);
+        });
+
+        // Totals
+        const totalExpensesRow = ['סה״כ הוצאות', '', '', ...expenseTotals].map(escapeCsv);
+        const totalIncomeRow = ['סה״כ הכנסות', '', '', ...incomeTotals].map(escapeCsv);
+        const balanceRow = ['יתרה', '', '', ...balanceTotals].map(escapeCsv);
+
+        // Combine all data
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(r => r.join(',')),
+            '', // Empty row
+            totalExpensesRow.join(','),
+            totalIncomeRow.join(','),
+            balanceRow.join(',')
+        ].join('\n');
+
+        // Add BOM for Hebrew support in Excel
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `tahzit_hotzaot_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="p-4 md:p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -185,13 +236,23 @@ const ExpensesForecastTable: React.FC<ExpensesForecastTableProps> = ({
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">תחזית הוצאות</h2>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">ניהול ותחזית הוצאות קבועות לשנה הקרובה.</p>
                 </div>
-                <button
-                    onClick={onAddClick}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 shadow-sm transition-colors"
-                >
-                    <PlusIcon className="w-5 h-5" />
-                    הוסף הוצאה קבועה
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleDownloadCSV}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
+                        title="הורד לקובץ CSV"
+                    >
+                        <ArrowDownTrayIcon className="w-5 h-5" />
+                        <span>ייצא ל-CSV</span>
+                    </button>
+                    <button
+                        onClick={onAddClick}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 shadow-sm transition-colors"
+                    >
+                        <PlusIcon className="w-5 h-5" />
+                        הוסף הוצאה קבועה
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-gray-800 overflow-hidden flex flex-col">
@@ -331,17 +392,19 @@ const ExpensesForecastTable: React.FC<ExpensesForecastTableProps> = ({
                 </div>
             </div>
 
-            {modalState.isOpen && modalState.expenseId && modalState.monthKey && (
-                <MonthlyExpenseOverrideModal
-                    expenseName={modalState.expenseName}
-                    monthLabel={modalState.monthLabel}
-                    currentAmount={modalState.currentAmount}
-                    existingInstance={monthlyInstances.find(i => i.sourceRecurringExpenseId === modalState.expenseId && i.monthKey === modalState.monthKey)}
-                    onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
-                    onSave={handleSaveOverride}
-                />
-            )}
-        </div>
+            {
+                modalState.isOpen && modalState.expenseId && modalState.monthKey && (
+                    <MonthlyExpenseOverrideModal
+                        expenseName={modalState.expenseName}
+                        monthLabel={modalState.monthLabel}
+                        currentAmount={modalState.currentAmount}
+                        existingInstance={monthlyInstances.find(i => i.sourceRecurringExpenseId === modalState.expenseId && i.monthKey === modalState.monthKey)}
+                        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+                        onSave={handleSaveOverride}
+                    />
+                )
+            }
+        </div >
     );
 };
 
