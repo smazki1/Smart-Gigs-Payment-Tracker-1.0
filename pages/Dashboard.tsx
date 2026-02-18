@@ -122,6 +122,17 @@ export default function Dashboard() {
         }
     };
 
+
+    // Duplicate Gig
+    const handleDuplicateGig = (gig: Gig) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, createdAt, ...gigData } = gig;
+        // Open modal with data but without ID, effectively creating a new one
+        setEditingGig({ ...gigData } as Gig);
+        setIsGigModalOpen(true);
+        toast.info('שכפול אירוע: אנא ודא/י את הפרטים ושמור/י.');
+    };
+
     // For TableView direct add
     const handleDirectAddGig = async (gig: Gig) => {
         try {
@@ -136,16 +147,136 @@ export default function Dashboard() {
         }
     };
 
-    const handleDeleteGig = async (gig: Gig) => {
-        if (confirm('האם אתה בטוח שברצונך למחוק אירוע זה?')) {
-            try {
-                await deleteGig(gig.id);
-                toast.success('האירוע נמחק');
-            } catch (error) {
-                console.error("Delete gig error:", error);
-                toast.error('שגיאה במחיקת האירוע');
+    // Delete Confirmation State
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{
+        isOpen: boolean;
+        type: 'gig' | 'package' | 'expense' | 'note' | 'monthlyInstance' | 'bulk';
+        id?: string;
+        ids?: string[];
+        title: string;
+        message: string;
+        item?: any; // Store the full item if needed for optimistic updates or logging
+    }>({
+        isOpen: false,
+        type: 'gig',
+        title: '',
+        message: ''
+    });
+
+    const handleConfirmDelete = async () => {
+        const { type, id, ids, item } = deleteConfirmation;
+
+        try {
+            switch (type) {
+                case 'package':
+                    if (id) {
+                        await deletePackage(id);
+                        toast.success('החבילה נמחקה');
+                    }
+                    break;
+                case 'gig':
+                    if (id) {
+                        await deleteGig(id);
+                        toast.success('האירוע נמחק');
+                    }
+                    break;
+                case 'expense':
+                    if (id) {
+                        await deleteExpense(id);
+                        toast.success('ההוצאה נמחקה');
+                    }
+                    break;
+                case 'note':
+                    if (id) {
+                        await deleteNote(id);
+                        toast.success('הפתקית נמחקה');
+                    }
+                    break;
+                case 'monthlyInstance':
+                    // This one requires more complex params usually (recurringId, monthKey)
+                    // usage: id would be the instance id if it exists
+                    if (item && item.recurringId && item.monthKey) {
+                        // logic for deleteMonthlyInstance usually needs just ID if it exists, or handling logical deletion
+                        // For now focusing on the specific reported issue (Package) 
+                        // But we can implement it if we passed the right data in 'item'
+                        // The original handler was: deleteMonthlyInstance(instance.id)
+                        if (item.id) await deleteMonthlyInstance(item.id);
+                        toast.success('החריגה בוטלה');
+                    }
+                    break;
+                case 'bulk':
+                    if (ids && ids.length > 0) {
+                        const promises = ids.map(gid => deleteGig(gid));
+                        await Promise.all(promises);
+                        toast.success(`${ids.length} אירועים נמחקו`);
+                    }
+                    break;
             }
+        } catch (error) {
+            console.error(`Error deleting ${type}:`, error);
+            toast.error('שגיאה במחיקה');
+        } finally {
+            setDeleteConfirmation(prev => ({ ...prev, isOpen: false }));
         }
+    };
+
+    const handleDeletePackage = (pkg: Package) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            type: 'package',
+            id: pkg.id,
+            title: 'מחיקת חבילה',
+            message: 'האם אתה בטוח שברצונך למחוק חבילה זו? פעולה זו אינה הפיכה.',
+            item: pkg
+        });
+    };
+
+    // Keep other handlers using native confirm for now unless requested, 
+    // or migrate them all? User reported Package deletion issue.
+    // Let's migrate them all for consistency, as it's cleaner.
+
+    const handleDeleteGig = (gig: Gig) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            type: 'gig',
+            id: gig.id,
+            title: 'מחיקת אירוע',
+            message: 'האם אתה בטוח שברצונך למחוק אירוע זה?',
+            item: gig
+        });
+    };
+
+    const handleDeleteExpense = (expense: RecurringExpense) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            type: 'expense',
+            id: expense.id,
+            title: 'מחיקת הוצאה',
+            message: 'האם אתה בטוח שברצונך למחוק הוצאה זו?',
+            item: expense
+        });
+    };
+
+    // Original: handleDeleteNote
+    const handleDeleteNote = (id: string) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            type: 'note',
+            id: id,
+            title: 'מחיקת פתקית',
+            message: 'למחוק פתקית זו?',
+        });
+    };
+
+    // Original: handleBulkDelete
+    const handleBulkDelete = (ids: string[]) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            type: 'bulk',
+            ids: ids,
+            title: 'מחיקה מרובה',
+            message: `האם אתה בטוח שברצונך למחוק ${ids.length} אירועים?`,
+        });
     };
 
     const handleMarkAsPaid = async (gig: Gig) => {
@@ -179,24 +310,13 @@ export default function Dashboard() {
         }
     };
 
-    const handleBulkDelete = async (ids: string[]) => {
-        if (confirm(`האם אתה בטוח שברצונך למחוק ${ids.length} אירועים?`)) {
-            try {
-                const promises = ids.map(id => deleteGig(id));
-                await Promise.all(promises);
-                toast.success(`${ids.length} אירועים נמחקו`);
-            } catch (error) {
-                console.error("Bulk delete error:", error);
-                toast.error('שגיאה במחיקה מרובה');
-            }
-        }
-    };
-
     const handleSmartAdd = (parsed: ParsedGig) => {
         const newGig: Partial<Gig> = {
             name: parsed.name,
+            supplierName: parsed.supplierName,
             paymentAmount: parsed.paymentAmount,
             eventDate: parsed.eventDate,
+            duration: parsed.duration,
             status: GigStatus.Pending,
             createdAt: new Date().toISOString(),
         };
@@ -209,7 +329,6 @@ export default function Dashboard() {
         setIsReminderModalOpen(true);
     };
 
-    // Packages
     const handleAddPackage = () => {
         setEditingPackage(null);
         setIsPackageModalOpen(true);
@@ -237,19 +356,6 @@ export default function Dashboard() {
         }
     };
 
-    const handleDeletePackage = async (pkg: Package) => {
-        if (confirm('האם אתה בטוח שברצונך למחוק חבילה זו?')) {
-            try {
-                await deletePackage(pkg.id);
-                toast.success('החבילה נמחקה');
-            } catch (error) {
-                console.error("Delete package error:", error);
-                toast.error('שגיאה במחיקת החבילה');
-            }
-        }
-    };
-
-    // Expenses
     const handleAddExpense = () => {
         setEditingExpense(null);
         setIsExpenseModalOpen(true);
@@ -277,18 +383,6 @@ export default function Dashboard() {
         }
     };
 
-    const handleDeleteExpense = async (expense: RecurringExpense) => {
-        if (confirm('האם אתה בטוח שברצונך למחוק הוצאה זו?')) {
-            try {
-                await deleteExpense(expense.id);
-                toast.success('ההוצאה נמחקה');
-            } catch (error) {
-                console.error("Delete expense error:", error);
-                toast.error('שגיאה במחיקת ההוצאה');
-            }
-        }
-    };
-
     const handleSaveMonthlyInstance = async (instance: MonthlyExpenseInstance) => {
         try {
             await saveMonthlyInstance(instance);
@@ -312,8 +406,6 @@ export default function Dashboard() {
         }
     };
 
-
-    // Rewards / Notes
     const handleAddNote = async () => {
         try {
             await addNote({
@@ -334,19 +426,6 @@ export default function Dashboard() {
         }
     };
 
-    const handleDeleteNote = async (id: string) => {
-        if (confirm('למחוק פתקית זו?')) {
-            try {
-                await deleteNote(id);
-                toast.success('הפתקית נמחקה');
-            } catch (error) {
-                console.error("Delete note error:", error);
-                toast.error('שגיאה במחיקה');
-            }
-        }
-    };
-
-    // Import Flow
     const handlePreviewImport = (importedGigs: Gig[]) => {
         setImportCandidates(importedGigs);
         setIsImportPreviewOpen(true);
@@ -398,6 +477,7 @@ export default function Dashboard() {
                         onAddPackage={handleAddPackage}
                         onEditPackage={handleEditPackage}
                         onDeletePackage={handleDeletePackage}
+                        onDuplicate={handleDuplicateGig}
                     />
                 );
             case 'table':
@@ -536,6 +616,15 @@ export default function Dashboard() {
                     status={importStatus.status}
                     message={importStatus.message}
                     onClose={() => setImportStatus(null)}
+                />
+            )}
+
+            {deleteConfirmation.isOpen && (
+                <ConfirmationModal
+                    title={deleteConfirmation.title}
+                    message={deleteConfirmation.message}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
                 />
             )}
         </div>

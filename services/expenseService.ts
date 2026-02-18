@@ -18,14 +18,15 @@ export const getExpenseAmountForMonth = (
   // 2. Base Rules
   if (!expense.isActive) return null;
 
-  const monthStartStr = `${monthKey}-01`;
-  const monthEndStr = `${monthKey}-31`; // Used for simple string comparison
+  // Normalize dates to YYYY-MM for comparison
+  const expenseStartMonth = expense.startDate.substring(0, 7); // "YYYY-MM"
+  const expenseEndMonth = expense.endDate ? expense.endDate.substring(0, 7) : null;
 
   // Starts after this month?
-  if (expense.startDate > monthEndStr) return null;
+  if (expenseStartMonth > monthKey) return null;
 
   // Ended before this month?
-  if (expense.endDate && expense.endDate < monthStartStr) return null;
+  if (expenseEndMonth && expenseEndMonth < monthKey) return null;
 
   return expense.monthlyAmount;
 };
@@ -89,11 +90,14 @@ export const getTotalExpensesForMonth = (
     }
   });
 
-  return expenses.reduce((sum, expense) => {
+  const total = expenses.reduce((sum, expense) => {
     const instance = instanceMap.get(expense.id);
     const amount = getExpenseAmountForMonth(expense, monthKey, instance);
     return sum + (amount || 0);
   }, 0);
+
+  console.log(`[ExpensesDebug] Month: ${monthKey}, Total: ${total}, Count: ${expenses.length}`);
+  return total;
 };
 
 export const getMonthIncome = (gigs: Gig[], packages: Package[], monthKey: string): number => {
@@ -113,7 +117,9 @@ export const getMonthIncome = (gigs: Gig[], packages: Package[], monthKey: strin
     return acc;
   }, 0);
 
-  return gigIncome + packageIncome;
+  const totalIncome = gigIncome + packageIncome;
+  console.log(`[IncomeDebug] Month: ${monthKey}, GigIncome: ${gigIncome}, PackageIncome: ${packageIncome}, Total: ${totalIncome}`);
+  return totalIncome;
 };
 
 export const getMonthSummary = (

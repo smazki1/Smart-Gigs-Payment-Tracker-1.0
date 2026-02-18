@@ -25,6 +25,7 @@ interface DashboardProps {
   onAddPackage?: () => void;
   onEditPackage?: (pkg: Package) => void;
   onDeletePackage?: (pkg: Package) => void;
+  onDuplicate: (gig: Gig) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -64,7 +65,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         ) : null}
       </div>
-      <GigManagement gigs={gigs} {...props} />
+      <GigManagement gigs={gigs} onDuplicate={props.onDuplicate} {...props} />
     </>
   );
 };

@@ -134,6 +134,14 @@ const PackagesManager: React.FC<PackagesManagerProps> = ({ packages, gigs, onAdd
         const usedHoursGigs = linkedGigs.filter(g => g.usageType === 'consulting');
         const usedHours = usedHoursGigs.reduce((sum, g) => sum + (parseFloat(String(g.duration || 0)) || 0), 0);
 
+        // DEBUG LOGGING
+        console.log(`[PackagesManager] pkgId: ${pkgId}`, {
+            linkedGigsCount: linkedGigs.length,
+            usedWorkshops,
+            usedHours,
+            usedHoursGigs: usedHoursGigs.map(g => ({ id: g.id, duration: g.duration, name: g.name }))
+        });
+
         return { usedWorkshops, usedHours, usedHoursGigs };
     };
 

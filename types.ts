@@ -50,6 +50,7 @@ export interface ParsedGig {
   supplierName?: string;
   paymentAmount: number;
   eventDate: string; // YYYY-MM-DD
+  duration?: number; // Duration in hours
 }
 
 export interface RewardNote {

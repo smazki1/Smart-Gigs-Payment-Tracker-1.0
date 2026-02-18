@@ -177,11 +177,21 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
         const pkgId = e.target.value;
         const selectedPkg = packages.find(p => p.id === pkgId);
 
+        let defaultUsageType: 'workshop' | 'consulting' | undefined = undefined;
+        if (selectedPkg) {
+            if (selectedPkg.maxHours > 0 && (!selectedPkg.maxWorkshops || selectedPkg.maxWorkshops === 0)) {
+                defaultUsageType = 'consulting';
+            } else if (selectedPkg.maxWorkshops > 0 && (!selectedPkg.maxHours || selectedPkg.maxHours === 0)) {
+                defaultUsageType = 'workshop';
+            }
+        }
+
         setFormData(prev => ({
             ...prev,
             packageId: pkgId,
             // Auto-fill supplier name from package if selected
-            supplierName: selectedPkg ? selectedPkg.clientName : prev.supplierName
+            supplierName: selectedPkg ? selectedPkg.clientName : prev.supplierName,
+            usageType: defaultUsageType || prev.usageType // Only override if we found a clear default
         }));
     };
 
@@ -240,6 +250,16 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
             usageType: formData.billingType === 'package' ? formData.usageType : undefined,
             backgroundColor: formData.backgroundColor,
         };
+
+        // DEBUG LOGGING
+        console.log('[GigFormModal] Saving gig:', {
+            id: gigToSave.id,
+            billingType: formData.billingType,
+            packageId: gigToSave.packageId,
+            usageType: gigToSave.usageType,
+            duration: gigToSave.duration
+        });
+
         onSave(gigToSave);
         onClose();
     };
@@ -255,6 +275,10 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
             }
             if (!formData.usageType) {
                 alert('נא לבחור סוג חיוב מהחבילה');
+                return;
+            }
+            if (formData.usageType === 'consulting' && (!formData.duration || formData.duration <= 0)) {
+                alert('חובה להזין משך זמן (בשעות) עבור שימוש בבנק שעות');
                 return;
             }
         }
@@ -327,7 +351,7 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
                                 </div>
                                 <div>
                                     <label className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">סוג ניצול</label>
-                                    <div className="flex gap-4">
+                                    <div className="flex gap-4 items-center">
                                         <label className="inline-flex items-center">
                                             <input type="radio" name="usageType" value="workshop" checked={formData.usageType === 'workshop'} onChange={() => setFormData(prev => ({ ...prev, usageType: 'workshop' }))} className="form-radio text-primary-600" />
                                             <span className="mr-2 text-gray-700 dark:text-gray-300">סדנה (מתוך מכסה)</span>
@@ -337,6 +361,22 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
                                             <span className="mr-2 text-gray-700 dark:text-gray-300">שעות (מתוך בנק)</span>
                                         </label>
                                     </div>
+                                    {formData.usageType === 'consulting' && (
+                                        <div className="mt-2">
+                                            <label htmlFor="duration-package" className="block mb-1 text-sm font-medium text-gray-900 dark:text-white">משך (בשעות)</label>
+                                            <input
+                                                type="number"
+                                                name="duration"
+                                                id="duration-package"
+                                                value={formData.duration || ''}
+                                                onChange={handleChange}
+                                                placeholder="לדוגמה: 2.5"
+                                                min="0.1"
+                                                step="0.1"
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-xs text-blue-800 dark:text-blue-300 rounded border border-blue-100 dark:border-blue-800">
                                     <InformationCircleIcon className="w-4 h-4 inline ml-1" />
@@ -378,10 +418,12 @@ export const GigFormModal: React.FC<GigFormModalProps> = ({ gig, onClose, onSave
                             <label htmlFor="notes" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">הערות</label>
                             <textarea name="notes" id="notes" rows={3} value={formData.notes} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
                         </div>
-                        <div>
-                            <label htmlFor="duration" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">משך (בשעות)</label>
-                            <input type="number" name="duration" id="duration" value={formData.duration || ''} onChange={handleChange} placeholder="לדוגמה: 4" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
-                        </div>
+                        {formData.billingType !== 'package' && (
+                            <div>
+                                <label htmlFor="duration" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">משך (בשעות)</label>
+                                <input type="number" name="duration" id="duration" value={formData.duration || ''} onChange={handleChange} placeholder="לדוגמה: 4" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" />
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="summary" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">סיכום ותובנות</label>
                             <textarea name="summary" id="summary" rows={3} value={formData.summary} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>

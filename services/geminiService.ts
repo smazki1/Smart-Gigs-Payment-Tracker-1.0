@@ -16,7 +16,7 @@ export const parseGigFromString = async (text: string): Promise<ParsedGig | null
   try {
     const currentDate = new Date().toISOString().split('T')[0];
     const prompt = `
-      מהטקסט הבא, חלץ את שם האירוע, שם הספק (הגורם המשלם), סכום התשלום במספרים, ותאריך האירוע.
+      מהטקסט הבא, חלץ את שם האירוע, שם הספק (הגורם המשלם), סכום התשלום במספרים, תאריך האירוע, ומשך האירוע בשעות (אם צוין).
       התאריך הנוכחי הוא ${currentDate}.
       פורמט הפלט עבור התאריך חייב להיות YYYY-MM-DD.
       אם השנה לא מצוינת, יש להניח שהיא השנה הנוכחית, או השנה הבאה אם התאריך כבר עבר.
@@ -34,7 +34,8 @@ export const parseGigFromString = async (text: string): Promise<ParsedGig | null
             name: { type: Type.STRING, description: "The name of the gig or event." },
             supplierName: { type: Type.STRING, description: "The name of the supplier or client paying for the service." },
             paymentAmount: { type: Type.NUMBER, description: "The payment amount as a number." },
-            eventDate: { type: Type.STRING, description: "The event date in YYYY-MM-DD format." }
+            eventDate: { type: Type.STRING, description: "The event date in YYYY-MM-DD format." },
+            duration: { type: Type.NUMBER, description: "The duration of the event in hours (optional)." }
           },
           required: ["name", "paymentAmount", "eventDate"],
         },

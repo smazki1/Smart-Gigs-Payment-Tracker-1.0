@@ -4,7 +4,7 @@ import { GigStatus } from '../types';
 import { VAT_RATE } from '../constants';
 import { formatCurrency, formatDate, isOverdue, getMonthHebrew, getHolidaysForYear } from '../utils/helpers';
 import { parseGigFromString } from '../services/geminiService';
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, CheckCircleIcon, PaperAirplaneIcon, PlusIcon, ListBulletIcon, CalendarDaysIcon, SparklesIcon, CurrencyDollarIcon, PaperClipIcon, ChatBubbleBottomCenterTextIcon, XMarkIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, CheckCircleIcon, PaperAirplaneIcon, PlusIcon, ListBulletIcon, CalendarDaysIcon, SparklesIcon, CurrencyDollarIcon, PaperClipIcon, ChatBubbleBottomCenterTextIcon, XMarkIcon, DocumentDuplicateIcon } from './icons';
 
 // --- Smart Add Component ---
 interface SmartAddComponentProps {
@@ -206,8 +206,9 @@ interface CalendarViewProps {
     onEdit: (gig: Gig) => void;
     onReschedule: (gigId: string, newDate: string) => void;
     onDelete: (gig: Gig) => void;
+    onDuplicate: (gig: Gig) => void;
 }
-const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onReschedule, onDelete }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onReschedule, onDelete, onDuplicate }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [dragOverDate, setDragOverDate] = useState<string | null>(null);
     const [holidays, setHolidays] = useState<Map<string, string>>(new Map());
@@ -376,6 +377,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ gigs, onAdd, onEdit, onResc
                                                 >
                                                     <TrashIcon className="w-3 h-3" />
                                                 </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onDuplicate(gig);
+                                                    }}
+                                                    className="absolute top-1/2 left-7 rtl:right-7 rtl:left-auto transform -translate-y-1/2 p-1 bg-blue-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-blue-700 z-10"
+                                                    aria-label={`שכפל ${gig.name}`}
+                                                    title="שכפל אירוע"
+                                                >
+                                                    <DocumentDuplicateIcon className="w-3 h-3" />
+                                                </button>
                                             </div>
                                         );
                                     })}
@@ -398,6 +410,7 @@ interface GigManagementProps extends Omit<GigItemProps, 'gig' | 'isSelected' | '
     onReschedule: (gigId: string, newDate: string) => void;
     onBulkMarkAsPaid: (ids: string[]) => void;
     onBulkDelete: (ids: string[]) => void;
+    onDuplicate: (gig: Gig) => void;
 }
 type DateFilter = 'all' | 'thisMonth' | 'lastMonth' | 'thisYear';
 
@@ -546,7 +559,7 @@ const GigManagement: React.FC<GigManagementProps> = ({ gigs, onSmartAdd, onAdd, 
                 {activeView === 'list' ? (
                     <ListView gigs={filteredGigs} selectedGigs={selectedGigs} onToggleSelection={handleToggleSelection} {...itemProps} />
                 ) : (
-                    <CalendarView gigs={gigs} onAdd={handleAddFromCalendar} onEdit={itemProps.onEdit} onReschedule={onReschedule} onDelete={itemProps.onDelete} />
+                    <CalendarView gigs={gigs} onAdd={handleAddFromCalendar} onEdit={itemProps.onEdit} onReschedule={onReschedule} onDelete={itemProps.onDelete} onDuplicate={itemProps.onDuplicate} />
                 )}
             </div>
 
