@@ -26,12 +26,12 @@ const PackageCard: React.FC<{ pkg: Package; usage: { usedWorkshops: number; used
                 ? 'border-white/20'
                 : `${isUnbilled ? 'bg-orange-50/50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/30' : 'border-slate-100 dark:border-gray-700/50'}`
                 }`}>
-                <div className="flex justify-between items-start mb-2">
-                    <div>
+                <div className="flex justify-between items-start mb-2 gap-2">
+                    <div className="min-w-0 flex-1">
                         <h3 className={`font-bold text-lg truncate ${pkg.backgroundColor ? 'text-white' : 'text-gray-900 dark:text-white'}`} title={pkg.name}>{pkg.name}</h3>
-                        <p className={`text-sm ${pkg.backgroundColor ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>{pkg.clientName}</p>
+                        <p className={`text-sm truncate ${pkg.backgroundColor ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>{pkg.clientName}</p>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 shrink-0">
                         <button onClick={onEdit} className={`p-1.5 rounded-lg transition-colors ${pkg.backgroundColor ? 'text-white/80 hover:bg-white/20 hover:text-white' : 'text-gray-400 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-gray-700'}`}>
                             <PencilIcon className="w-4 h-4" />
                         </button>
