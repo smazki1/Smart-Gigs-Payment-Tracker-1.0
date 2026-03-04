@@ -3,7 +3,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { RecurringExpense, MonthlyExpenseInstance, Gig, Package } from '../types';
 import { getMonthlyExpensesGrid, getTotalExpensesForMonth, getMonthIncome } from '../services/expenseService';
 import { formatCurrency, getMonthHebrew } from '../utils/helpers';
-import { PencilIcon, TrashIcon, PlusIcon, CheckCircleIcon, XMarkIcon, InformationCircleIcon, ArrowDownTrayIcon } from './icons';
+import { PencilIcon, TrashIcon, PlusIcon, CheckCircleIcon, XMarkIcon, InformationCircleIcon, ArrowDownTrayIcon, ChevronRightIcon, ChevronLeftIcon } from './icons';
 import { MonthlyExpenseOverrideModal } from './Modals';
 
 interface ExpensesForecastTableProps {
@@ -98,8 +98,15 @@ const ExpensesForecastTable: React.FC<ExpensesForecastTableProps> = ({
     onAddClick,
     onEditClick
 }) => {
-    const startMonth = new Date();
-    startMonth.setDate(1); // Start from 1st of current month
+    const [monthOffset, setMonthOffset] = useState(0);
+
+    const startMonth = useMemo(() => {
+        const d = new Date();
+        d.setDate(1); // Set to 1st to avoid end-of-month skipping issues
+        d.setMonth(d.getMonth() + monthOffset);
+        return d;
+    }, [monthOffset]);
+
     const monthsCount = 12;
 
     const [modalState, setModalState] = useState<{
@@ -236,7 +243,30 @@ const ExpensesForecastTable: React.FC<ExpensesForecastTableProps> = ({
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">תחזית הוצאות</h2>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">ניהול ותחזית הוצאות קבועות לשנה הקרובה.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1 mr-auto">
+                        <button
+                            onClick={() => setMonthOffset(prev => prev + 1)}
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+                            title="חודשים קדימה"
+                        >
+                            <ChevronLeftIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setMonthOffset(0)}
+                            className="px-2 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            title="חזור לחודש הנוכחי"
+                        >
+                            היום
+                        </button>
+                        <button
+                            onClick={() => setMonthOffset(prev => prev - 1)}
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors"
+                            title="חודשים אחורה"
+                        >
+                            <ChevronRightIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                     <button
                         onClick={handleDownloadCSV}
                         className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
